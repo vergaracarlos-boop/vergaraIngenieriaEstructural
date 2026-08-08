@@ -385,11 +385,11 @@
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                 <div class="bg-slate-50 p-3 rounded-lg border border-slate-200">
                   <span class="font-bold text-slate-800 block mb-1">Eje Fuerte X-X:</span>
-                  <p class="text-slate-600">$(KL/r)_x = \frac{K_x \cdot L_x}{r_x} = \frac{\text{<span id="calcKxLx">1.0 x 3.00 m</span>}}{\text{<span id="calcRxCm">12.46 cm</span>}} =$ <strong id="calcKlrx" class="text-slate-800">24.08</strong></p>
+                  <div id="klrxFormulaContainer" class="text-slate-800 py-1 overflow-x-auto"></div>
                 </div>
                 <div class="bg-slate-50 p-3 rounded-lg border border-slate-200">
                   <span class="font-bold text-slate-800 block mb-1">Eje Débil Y-Y:</span>
-                  <p class="text-slate-600">$(KL/r)_y = \frac{K_y \cdot L_y}{r_y} = \frac{\text{<span id="calcKyLy">1.0 x 3.00 m</span>}}{\text{<span id="calcRyCm">3.35 cm</span>}} =$ <strong id="calcKlry" class="text-slate-800">89.55</strong></p>
+                  <div id="klryFormulaContainer" class="text-slate-800 py-1 overflow-x-auto"></div>
                 </div>
               </div>
             </div>
@@ -436,14 +436,14 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
                   <div class="bg-slate-800/80 p-3 rounded-lg border border-slate-700">
                     <span class="text-emerald-400 font-bold block mb-1">MÉTODO LRFD ($\phi_c = 0.90$)</span>
-                    <p class="text-slate-300">$\phi_c P_n = 0.90 \times \text{<span id='pnLrfdText'>878.4</span> kN}$</p>
+                    <div id="lrfdFormulaContainer" class="text-slate-300 my-1 overflow-x-auto"></div>
                     <p class="text-xl font-black text-white mt-1" id="lrfdFinalResult">790.6 kN</p>
                     <span class="text-[11px] text-slate-400 font-medium" id="lrfdFinalTon">80.62 tonf / 80,620 kgf</span>
                   </div>
 
                   <div class="bg-slate-800/80 p-3 rounded-lg border border-slate-700">
                     <span class="text-blue-400 font-bold block mb-1">MÉTODO ASD ($\Omega_c = 1.67$)</span>
-                    <p class="text-slate-300">$P_n / \Omega_c = \text{<span id='pnAsdText'>878.4</span> kN} / 1.67$</p>
+                    <div id="asdFormulaContainer" class="text-slate-300 my-1 overflow-x-auto"></div>
                     <p class="text-xl font-black text-white mt-1" id="asdFinalResult">526.0 kN</p>
                     <span class="text-[11px] text-slate-400 font-medium" id="asdFinalTon">53.64 tonf / 53,640 kgf</span>
                   </div>
@@ -926,14 +926,14 @@
 
       document.getElementById('calcNetQ').textContent = res.Q.toFixed(3);
 
-      // Slenderness
-      document.getElementById('calcKxLx').textContent = `${Kx.toFixed(2)} x ${Lx_m.toFixed(2)} m`;
-      document.getElementById('calcRxCm').textContent = `${res.p.rx} cm`;
-      document.getElementById('calcKlrx').textContent = res.klr_x.toFixed(2);
+      // Render Step 3 Slenderness formulas with KaTeX
+      if (typeof katex !== 'undefined') {
+        const klrxTex = `\\left(\\frac{KL}{r}\\right)_x = \\frac{K_x \\cdot L_x}{r_x} = \\frac{${Kx.toFixed(2)} \\cdot ${Lx_m.toFixed(2)}\\text{ m}}{${res.p.rx}\\text{ cm}} = \\mathbf{${res.klr_x.toFixed(2)}}`;
+        document.getElementById('klrxFormulaContainer').innerHTML = katex.renderToString(klrxTex, { displayMode: false, throwOnError: false });
 
-      document.getElementById('calcKyLy').textContent = `${Ky.toFixed(2)} x ${Ly_m.toFixed(2)} m`;
-      document.getElementById('calcRyCm').textContent = `${res.p.ry} cm`;
-      document.getElementById('calcKlry').textContent = res.klr_y.toFixed(2);
+        const klryTex = `\\left(\\frac{KL}{r}\\right)_y = \\frac{K_y \\cdot L_y}{r_y} = \\frac{${Ky.toFixed(2)} \\cdot ${Ly_m.toFixed(2)}\\text{ m}}{${res.p.ry}\\text{ cm}} = \\mathbf{${res.klr_y.toFixed(2)}}`;
+        document.getElementById('klryFormulaContainer').innerHTML = katex.renderToString(klryTex, { displayMode: false, throwOnError: false });
+      }
 
       // Render Fe formula
       if (typeof katex !== 'undefined') {
@@ -949,6 +949,13 @@
           ? `F_{cr} = Q \\left[ 0.658^{\\frac{Q \\cdot F_y}{F_e}} \\right] F_y = ${res.Q.toFixed(3)} \\left[ 0.658^{\\frac{${(res.Q * Fy).toFixed(1)}}{${res.Fe.toFixed(2)}}} \\right] ${Fy} = \\mathbf{${res.Fcr.toFixed(2)}\\text{ MPa}}`
           : `F_{cr} = 0.877 \\cdot F_e = 0.877 \\cdot ${res.Fe.toFixed(2)} = \\mathbf{${res.Fcr.toFixed(2)}\\text{ MPa}}`;
         document.getElementById('fcrFormulaContainer').innerHTML = katex.renderToString(fcrTex, { displayMode: true, throwOnError: false });
+
+        // Render Step 5 LRFD and ASD formulas with KaTeX
+        const lrfdTex = `\\phi_c P_n = 0.90 \\times ${res.Pn_kN.toFixed(1)}\\text{ kN}`;
+        document.getElementById('lrfdFormulaContainer').innerHTML = katex.renderToString(lrfdTex, { displayMode: false, throwOnError: false });
+
+        const asdTex = `P_n / \\Omega_c = \\frac{${res.Pn_kN.toFixed(1)}\\text{ kN}}{1.67}`;
+        document.getElementById('asdFormulaContainer').innerHTML = katex.renderToString(asdTex, { displayMode: false, throwOnError: false });
       }
 
       const bucklingTypeDesc = document.getElementById('bucklingTypeDesc');
@@ -962,11 +969,9 @@
 
       document.getElementById('calcPnResult').textContent = `${res.Pn_kN.toFixed(1)} kN (${(res.Pn_kN / 9.80665).toFixed(2)} tonf)`;
 
-      document.getElementById('pnLrfdText').textContent = res.Pn_kN.toFixed(1);
       document.getElementById('lrfdFinalResult').textContent = `${res.phiPn_kN.toFixed(1)} kN`;
       document.getElementById('lrfdFinalTon').textContent = `${(res.phiPn_kN / 9.80665).toFixed(2)} tonf / ${(res.phiPn_kN * 101.972).toLocaleString('es-ES', {maximumFractionDigits:0})} kgf`;
 
-      document.getElementById('pnAsdText').textContent = res.Pn_kN.toFixed(1);
       document.getElementById('asdFinalResult').textContent = `${res.PnOmega_kN.toFixed(1)} kN`;
       document.getElementById('asdFinalTon').textContent = `${(res.PnOmega_kN / 9.80665).toFixed(2)} tonf / ${(res.PnOmega_kN * 101.972).toLocaleString('es-ES', {maximumFractionDigits:0})} kgf`;
 
