@@ -1,0 +1,14 @@
+# Ignorar carpetas enteras de dependencias o builds
+no_listar/
+
+# Ignorar archivos de configuración local o variables secretas
+.env
+.env.local
+
+# Ignorar archivos generados por el sistema operativo
+.DS_Store
+Thumbs.db
+
+# Ignorar archivos de log o temporales
+*.log
+*.tmp
