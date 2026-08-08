@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diseño Preliminar - Losa Colaborante Instadeck</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+        .card { background: white; border-radius: 0.75rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); }
+        .rib-svg { width: 100%; height: auto; max-height: 250px; }
+    </style>
+</head>
+<body class="p-4 md:p-8 text-gray-800">
+
+    <div class="max-w-6xl mx-auto space-y-6">
+        <!-- Header -->
+        <header class="text-center space-y-2">
+            <h1 class="text-3xl font-bold text-gray-900">Diseñador Preliminar: Losa Colaborante</h1>
+            <p class="text-gray-600">Basado en el <span class="font-semibold text-blue-600">manual_instadeck.pdf</span> (Placa 0.8 mm)</p>
+        </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+            
+            <!-- Panel de Datos de Entrada -->
+            <div class="card p-6 md:col-span-4 space-y-5">
+                <h2 class="text-xl font-semibold border-b pb-2">Datos de Diseño</h2>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Luz del Tramo (m) - <i>Separación ejes</i></label>
+                        <input type="number" id="input-span" value="2.5" step="0.1" min="1.0" max="4.0" class="w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500">
+                        <p class="text-xs text-gray-500 mt-1">Rango tablas: 1.6 m a 4.0 m</p>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Sobrecarga Requerida (kgf/m²)</label>
+                        <input type="number" id="input-load" value="500" step="50" min="50" class="w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500">
+                        <p class="text-xs text-gray-500 mt-1">Incluye carga viva y terminaciones adicionales.</p>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Condición de Apoyos</label>
+                        <select id="input-spans" class="w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500">
+                            <option value="1">1 Tramo (Simple)</option>
+                            <option value="2">2 Tramos (Doble)</option>
+                            <option value="3" selected>3 Tramos (Triple o Continuo)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Panel de Resultados -->
+            <div class="card p-6 md:col-span-8 flex flex-col justify-between">
+                <div>
+                    <h2 class="text-xl font-semibold border-b pb-2 mb-4">Resultado de Evaluación</h2>
+                    
+                    <div id="error-message" class="hidden bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4" role="alert">
+                        <p class="font-bold">Fuera de Parámetros</p>
+                        <p id="error-text">La luz o sobrecarga supera los valores máximos de la tabla del manual.</p>
+                    </div>
+
+                    <div id="success-results" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <!-- Espesor -->
+                        <div class="bg-blue-50 p-4 rounded-lg border border-blue-100">
+                            <p class="text-sm text-blue-600 font-semibold mb-1">Espesor Óptimo de Hormigón</p>
+                            <div class="flex items-baseline space-x-2">
+                                <span class="text-3xl font-bold text-gray-900" id="res-eh">5</span>
+                                <span class="text-gray-600 font-medium">cm sobre nervio</span>
+                            </div>
+                            <p class="text-sm text-gray-500 mt-1">Espesor Total Sistema: <strong id="res-et">11.35</strong> cm</p>
+                        </div>
+
+                        <!-- Capacidad -->
+                        <div class="bg-green-50 p-4 rounded-lg border border-green-100">
+                            <p class="text-sm text-green-700 font-semibold mb-1">Capacidad Admisible</p>
+                            <div class="flex items-baseline space-x-2">
+                                <span class="text-3xl font-bold text-gray-900" id="res-capacity">1000</span>
+                                <span class="text-gray-600 font-medium">kgf/m²</span>
+                            </div>
+                            <p class="text-sm text-gray-500 mt-1">Demanda: <strong id="res-demand">500</strong> kgf/m²</p>
+                        </div>
+
+                        <!-- Propiedades Físicas -->
+                        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                            <p class="text-sm text-gray-600 font-semibold mb-1">Propiedades y Materiales</p>
+                            <ul class="text-sm space-y-1 text-gray-700 mt-2">
+                                <li><strong>Peso Propio Total:</strong> <span id="res-weight">212</span> kgf/m²</li>
+                                <li><strong>Volumen Hormigón:</strong> <span id="res-volume">0.085</span> m³/m²</li>
+                                <li><strong>Placa Acero:</strong> Instadeck 0.8 mm (8 kg/m²)</li>
+                            </ul>
+                        </div>
+
+                        <!-- Alzaprimado -->
+                        <div id="prop-container" class="p-4 rounded-lg border">
+                            <p class="text-sm font-semibold mb-1" id="prop-title">Estado de Alzaprimado</p>
+                            <div class="flex items-baseline space-x-2">
+                                <span class="text-xl font-bold" id="res-prop-status">Requiere Alzaprima</span>
+                            </div>
+                            <p class="text-sm mt-1" id="res-prop-desc">Luz máxima sin apoyo: <strong>2.09</strong> m</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Representación Gráfica -->
+                <div class="mt-6 border-t pt-4" id="graphic-section">
+                    <p class="text-sm text-gray-500 mb-2 text-center">Sección Transversal Esquemática</p>
+                    <svg class="rib-svg" viewBox="0 -40 200 120" xmlns="http://www.w3.org/2000/svg">
+                        <!-- Placa Instadeck Trapezoidal (Simplificada 1 nervio) -->
+                        <path d="M10,63.5 L40,63.5 L60,0 L140,0 L160,63.5 L190,63.5" fill="none" stroke="#6b7280" stroke-width="2" />
+                        <!-- Hormigón -->
+                        <path id="svg-concrete" d="M10,63.5 L40,63.5 L60,0 L140,0 L160,63.5 L190,63.5 L190,-20 L10,-20 Z" fill="#e5e7eb" opacity="0.7" />
+                        
+                        <!-- Cotas -->
+                        <!-- Altura Nervio -->
+                        <line x1="2" y1="0" x2="2" y2="63.5" stroke="#374151" stroke-width="1" />
+                        <line x1="0" y1="0" x2="4" y2="0" stroke="#374151" stroke-width="1" />
+                        <line x1="0" y1="63.5" x2="4" y2="63.5" stroke="#374151" stroke-width="1" />
+                        <text x="5" y="35" font-size="8" fill="#374151">63.5</text>
+                        
+                        <!-- Altura Hormigon sobre nervio -->
+                        <line x1="90" y1="-20" x2="90" y2="0" stroke="#2563eb" stroke-width="1" id="svg-line-eh" />
+                        <line x1="88" y1="-20" x2="92" y2="-20" stroke="#2563eb" stroke-width="1" id="svg-line-eh-top" />
+                        <text x="95" y="-7" font-size="8" fill="#2563eb" font-weight="bold" id="svg-text-eh">e_h = 50</text>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- Nueva Sección: Tabla de Capacidad de Carga -->
+        <div class="card p-6 mt-6">
+            <h2 class="text-xl font-semibold border-b pb-2 mb-4">Tabla de Capacidad de Carga</h2>
+            <p class="text-sm text-gray-600 mb-4">Sobrecargas admisibles (kgf/m²) extraídas de la tabla del <strong class="text-blue-600 font-semibold">manual_instadeck.pdf</strong>. Estos valores ya consideran el peso propio del sistema (placa + hormigón) y los factores de seguridad pertinentes.</p>
+            <div class="overflow-x-auto rounded-lg border border-gray-200">
+                <table class="min-w-full text-sm text-left text-gray-600 border-collapse">
+                    <thead class="text-xs text-gray-700 uppercase bg-gray-100 border-b border-gray-200">
+                        <tr id="table-header-row">
+                            <!-- JS poblara esta fila -->
+                        </tr>
+                    </thead>
+                    <tbody id="table-body">
+                        <!-- JS poblara el cuerpo -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="mt-5 pt-4 border-t border-gray-200 bg-gray-50 p-4 rounded-lg">
+                <h3 class="text-sm font-semibold text-gray-800 mb-3">Notas y Consideraciones de Diseño (Tabla 5):</h3>
+                <ul class="text-xs text-gray-600 space-y-2 text-justify">
+                    <li><strong class="text-gray-800">a.</strong> La determinación de las sobrecargas admisibles se basa en las recomendaciones del Steel Deck Institute del 91 (SDI), y son las mínimas de las obtenidas por flexión, deflexión (L/360) y corte. Hormigón: H25 mínimo.</li>
+                    <li><strong class="text-gray-800">b.</strong> Las sobrecargas admisibles son consideradas uniformemente distribuidas y contemplan el peso propio de la placa de acero y del hormigón.</li>
+                    <li><strong class="text-gray-800">c.</strong> Para la selección de la separación entre apoyos, espesor de placa de acero y espesor de hormigón es indispensable utilizar esta tabla en conjunto con la de "Longitud máxima sin alzaprimado".</li>
+                    <li><strong class="text-gray-800">d.</strong> Los valores de la tabla son aplicables si previo al hormigonado la placa se fija adecuadamente a la estructura de apoyo en todos los valles, además se debe restringir el giro en los bordes discontinuos de la losa. Los conectores de corte deben sobresalir al menos 1-1/2" de la cresta de la placa y deben verificar una resistencia última al corte de 11.2 [Ton] por metro de ancho de placa en todos los apoyos.</li>
+                    <li><strong class="text-gray-800">e.</strong> Los valores señalados no son aplicables a losas simplemente apoyadas con bordes laterales sin apoyo y losas con cargas vivas móviles (estacionamientos), en cuyo caso se deberá consultar al Departamento de Asistencia Técnica para su análisis específico.</li>
+                    <li><strong class="text-gray-800">f.</strong> La placa debe ser fijada para actuar como plataforma de trabajo y evitar el derrame de hormigón, en ningún caso la separación de fijaciones placa-placa (traslape longitudinal) debe ser mayor a 1 m.</li>
+                    <li><strong class="text-gray-800">g.</strong> Hormigón H25 mínimo, cuyo espesor se mide sobre la cresta del panel, y su valor mínimo es de 5 cm.</li>
+                    <li><strong class="text-gray-800">h.</strong> Placa disponible en longitudes de 1.5 hasta 12 m.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DATOS EXTRAÍDOS DEL MANUAL INSTADECK (Placa 0.8mm)
+
+        // Capacidad de Carga (kgf/m2)
+        // [espesor_hormigon][luz_interpolada_cada_0.2m]
+        const loadsTable = {
+            5: { "1.6":2000, "1.8":1957, "2.0":1624, "2.2":1337, "2.4":1138, "2.6":949, "2.8":799, "3.0":677, "3.2":578, "3.4":496, "3.6":427, "3.8":369, "4.0":319 },
+            6: { "1.6":2000, "1.8":2000, "2.0":1818, "2.2":1497, "2.4":1281, "2.6":1075, "2.8":905, "3.0":768, "3.2":656, "3.4":563, "3.6":485, "3.8":419, "4.0":363 },
+            8: { "1.6":2000, "1.8":2000, "2.0":2000, "2.2":1815, "2.4":1554, "2.6":1328, "2.8":1119, "3.0":950, "3.2":812, "3.4":698, "3.6":602, "3.8":521, "4.0":452 },
+            10: { "1.6":2000, "1.8":2000, "2.0":2000, "2.2":2000, "2.4":1827, "2.6":1581, "2.8":1333, "3.0":1132, "3.2":968, "3.4":832, "3.6":719, "3.8":622, "4.0":540 },
+            12: { "1.6":2000, "1.8":2000, "2.0":2000, "2.2":2000, "2.4":2000, "2.6":1822, "2.8":1546, "3.0":1314, "3.2":1124, "3.4":967, "3.6":835, "3.8":724, "4.0":628 }
+        };
+
+        // Longitud máxima sin alzaprimado (m)
+        // [espesor_hormigon][numero_tramos]
+        const propsTable = {
+            5: { 1: 2.09, 2: 2.77, 3: 2.85 },
+            6: { 1: 2.00, 2: 2.67, 3: 2.74 },
+            8: { 1: 1.87, 2: 2.50, 3: 2.56 },
+            10: { 1: 1.75, 2: 2.36, 3: 2.41 },
+            12: { 1: 1.66, 2: 2.24, 3: 2.29 }
+        };
+
+        // Distancia máxima por control de deformación (m)
+        // [espesor_hormigon][numero_tramos]
+        const deflectionTable = {
+            5: { 1: 2.50, 2: 3.06, 3: 3.63 },
+            6: { 1: 2.72, 2: 3.33, 3: 3.95 },
+            8: { 1: 3.16, 2: 3.87, 3: 4.59 },
+            10: { 1: 3.60, 2: 4.41, 3: 5.23 },
+            12: { 1: 4.04, 2: 4.95, 3: 5.87 }
+        };
+
+        // Propiedades de la sección
+        const propData = {
+            5: { et: 11.35, vol: 0.085, weight: 212 },
+            6: { et: 12.35, vol: 0.095, weight: 236 },
+            8: { et: 14.35, vol: 0.115, weight: 284 },
+            10: { et: 16.35, vol: 0.135, weight: 332 },
+            12: { et: 18.35, vol: 0.155, weight: 380 }
+        };
+
+        const thicknesses = [5, 6, 8, 10, 12];
+
+        // Lógica Principal de Cálculo
+        function calculate() {
+            const spanRaw = parseFloat(document.getElementById('input-span').value);
+            const load = parseFloat(document.getElementById('input-load').value);
+            const tramos = parseInt(document.getElementById('input-spans').value);
+
+            // Reseteo visual
+            document.getElementById('error-message').classList.add('hidden');
+            document.getElementById('success-results').classList.remove('hidden');
+            document.getElementById('graphic-section').classList.remove('hidden');
+
+            // 1. Redondear luz al valor seguro en tabla (intervalos de 0.2m)
+            // ej: 2.3 -> 2.4 / 2.75 -> 2.8
+            let spanLookup = Math.ceil(spanRaw * 5) / 5;
+            if (spanLookup < 1.6) spanLookup = 1.6;
+
+            if (spanLookup > 4.0 || spanRaw > 5.87) {
+                showError(`La luz de ${spanRaw.toFixed(2)}m supera el máximo verificado en tablas. Requerido análisis especial.`);
+                return;
+            }
+
+            let bestEh = null;
+            let capacityObtained = 0;
+
+            // 2. Iterar sobre los espesores de menor a mayor
+            for (let eh of thicknesses) {
+                const key = spanLookup.toFixed(1);
+                
+                // Verificar en tabla de carga si existe el dato
+                if(!loadsTable[eh][key]) continue; 
+                
+                const capacity = loadsTable[eh][key];
+                const maxDeflection = deflectionTable[eh][tramos];
+
+                // Cumple por capacidad de carga Y por deflexión (luz real <= luz max deflexión)
+                if (capacity >= load && spanRaw <= maxDeflection) {
+                    bestEh = eh;
+                    capacityObtained = capacity;
+                    break; 
+                }
+            }
+
+            if (!bestEh) {
+                showError(`No existe un espesor estándar que soporte ${load} kgf/m² en una luz de ${spanRaw.toFixed(2)}m para ${tramos} tramo(s) cumpliendo deflexiones.`);
+                return;
+            }
+
+            // 3. Chequeo de Alzaprimado (Apuntalamiento temporal)
+            const maxNoProp = propsTable[bestEh][tramos];
+            const needsProp = spanRaw > maxNoProp;
+
+            // 4. Actualización de Interfaz
+            updateUI(bestEh, capacityObtained, load, needsProp, maxNoProp);
+        }
+
+        function updateUI(eh, capacity, demand, needsProp, maxNoProp) {
+            const pData = propData[eh];
+
+            document.getElementById('res-eh').textContent = eh;
+            document.getElementById('res-et').textContent = pData.et;
+            document.getElementById('res-capacity').textContent = capacity;
+            document.getElementById('res-demand').textContent = demand;
+            
+            document.getElementById('res-weight').textContent = pData.weight;
+            document.getElementById('res-volume').textContent = pData.vol.toFixed(3);
+
+            const propCont = document.getElementById('prop-container');
+            const propStatus = document.getElementById('res-prop-status');
+            const propDesc = document.getElementById('res-prop-desc');
+
+            if (needsProp) {
+                propCont.className = 'p-4 rounded-lg border bg-amber-50 border-amber-200';
+                propStatus.className = 'text-xl font-bold text-amber-700';
+                propStatus.textContent = 'Requiere Alzaprima';
+                propDesc.className = 'text-sm mt-1 text-amber-600';
+                propDesc.innerHTML = `Luz supera máximo sin apoyos (<strong>${maxNoProp.toFixed(2)}</strong> m). Instalar al centro del tramo.`;
+            } else {
+                propCont.className = 'p-4 rounded-lg border bg-gray-50 border-gray-200';
+                propStatus.className = 'text-xl font-bold text-gray-700';
+                propStatus.textContent = 'Sin Alzaprimas';
+                propDesc.className = 'text-sm mt-1 text-gray-500';
+                propDesc.innerHTML = `Autosoportante hasta <strong>${maxNoProp.toFixed(2)}</strong> m.`;
+            }
+
+            drawSVG(eh);
+        }
+
+        function showError(msg) {
+            document.getElementById('error-message').classList.remove('hidden');
+            document.getElementById('success-results').classList.add('hidden');
+            document.getElementById('graphic-section').classList.add('hidden');
+            document.getElementById('error-text').textContent = msg;
+        }
+
+        function drawSVG(eh) {
+            // Escalar el valor de eh (cm) para propósitos visuales (1 cm = 10 px aprox para proporción)
+            // Nervio = 6.35 cm => 63.5 px
+            const scaledEh = eh * 10;
+            const topY = -scaledEh;
+
+            // Actualizar path del hormigón
+            const concPath = `M10,63.5 L40,63.5 L60,0 L140,0 L160,63.5 L190,63.5 L190,${topY} L10,${topY} Z`;
+            document.getElementById('svg-concrete').setAttribute('d', concPath);
+
+            // Actualizar cotas y textos
+            document.getElementById('svg-line-eh').setAttribute('y1', topY);
+            document.getElementById('svg-line-eh-top').setAttribute('y1', topY);
+            document.getElementById('svg-line-eh-top').setAttribute('y2', topY);
+            
+            const textEl = document.getElementById('svg-text-eh');
+            textEl.setAttribute('y', topY / 2 + 3);
+            textEl.textContent = `e_h = ${eh * 10} mm`;
+        }
+
+        function renderCapacityTable() {
+            const headerRow = document.getElementById('table-header-row');
+            const tbody = document.getElementById('table-body');
+            
+            // Extraer las luces únicas iterando los valores del objeto
+            const spans = Object.keys(loadsTable[5]).map(Number).sort();
+            
+            // Construir encabezados
+            let thHTML = `<th class="border-r border-gray-200 px-4 py-3 bg-gray-100 text-center sticky left-0 z-10 w-32">Hormigón<br><span class="text-gray-500 lowercase font-normal">(sobre cresta)</span></th>`;
+            spans.forEach(span => {
+                thHTML += `<th class="px-3 py-3 text-center whitespace-nowrap min-w-[3.5rem]">${span.toFixed(1)} m</th>`;
+            });
+            headerRow.innerHTML = thHTML;
+
+            // Construir filas con los valores
+            let bodyHTML = '';
+            thicknesses.forEach((eh, index) => {
+                const bgClass = index % 2 === 0 ? 'bg-white' : 'bg-gray-50';
+                bodyHTML += `<tr class="${bgClass} hover:bg-blue-50 transition-colors border-b border-gray-100 last:border-none">
+                    <td class="border-r border-gray-200 px-4 py-2 font-bold text-gray-800 text-center sticky left-0 z-10 ${bgClass}">${eh} cm</td>`;
+                
+                spans.forEach(span => {
+                    const spanKey = span.toFixed(1);
+                    const capacity = loadsTable[eh][spanKey];
+                    // Formatear visualmente el 2000 (máximo tabular) o el valor calculado
+                    const displayVal = capacity ? (capacity === 2000 ? '<span class="text-green-600 font-semibold">2000</span>' : capacity) : '-';
+                    bodyHTML += `<td class="px-3 py-2 text-center border-r border-gray-50 last:border-none">${displayVal}</td>`;
+                });
+                bodyHTML += `</tr>`;
+            });
+            
+            tbody.innerHTML = bodyHTML;
+        }
+
+        // Listeners
+        document.getElementById('input-span').addEventListener('input', calculate);
+        document.getElementById('input-load').addEventListener('input', calculate);
+        document.getElementById('input-spans').addEventListener('change', calculate);
+
+        // Run on load
+        window.addEventListener('DOMContentLoaded', () => {
+            renderCapacityTable(); // Mostrar la tabla de capacidades
+            calculate();           // Realizar evaluación inicial
+        });
+    </script>
+</body>
+</html>
