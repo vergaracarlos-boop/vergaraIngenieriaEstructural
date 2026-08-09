@@ -59,10 +59,23 @@
             <div>
                 <label class="block text-sm font-semibold text-gray-700">Perfil IPE</label>
                 <select id="ipeSelect" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-gray-50 p-2 border">
+                    <option value="80">IPE 80</option>
+                    <option value="100">IPE 100</option>
+                    <option value="120">IPE 120</option>
+                    <option value="140">IPE 140</option>
+                    <option value="160">IPE 160</option>
+                    <option value="180">IPE 180</option>
                     <option value="200">IPE 200</option>
+                    <option value="220">IPE 220</option>
+                    <option value="240">IPE 240</option>
+                    <option value="270">IPE 270</option>
                     <option value="300" selected>IPE 300</option>
+                    <option value="330">IPE 330</option>
+                    <option value="360">IPE 360</option>
                     <option value="400">IPE 400</option>
+                    <option value="450">IPE 450</option>
                     <option value="500">IPE 500</option>
+                    <option value="550">IPE 550</option>
                     <option value="600">IPE 600</option>
                 </select>
             </div>
@@ -162,12 +175,25 @@
     </div>
 
     <script>
-        // Datos de perfiles IPE (mm)
+        // Datos completos de perfiles IPE (Dimensiones en mm, Área A en mm², Inercia Ix en mm⁴)
         const ipeData = {
-            200: { d: 200, bf: 100, tf: 8.5, tw: 5.6, A: 2848, Ix: 19430000 },
-            300: { d: 300, bf: 150, tf: 10.7, tw: 7.1, A: 5381, Ix: 83560000 },
-            400: { d: 400, bf: 180, tf: 13.5, tw: 8.6, A: 8446, Ix: 231300000 },
-            500: { d: 500, bf: 200, tf: 16.0, tw: 10.2, A: 11550, Ix: 481990000 },
+            80:  { d: 80,  bf: 46,  tf: 5.2,  tw: 3.8, A: 764,   Ix: 801000 },
+            100: { d: 100, bf: 55,  tf: 5.7,  tw: 4.1, A: 1030,  Ix: 1710000 },
+            120: { d: 120, bf: 64,  tf: 6.3,  tw: 4.4, A: 1320,  Ix: 3180000 },
+            140: { d: 140, bf: 73,  tf: 6.9,  tw: 4.7, A: 1640,  Ix: 5410000 },
+            160: { d: 160, bf: 82,  tf: 7.4,  tw: 5.0, A: 2010,  Ix: 8690000 },
+            180: { d: 180, bf: 91,  tf: 8.0,  tw: 5.3, A: 2390,  Ix: 13200000 },
+            200: { d: 200, bf: 100, tf: 8.5,  tw: 5.6, A: 2850,  Ix: 19400000 },
+            220: { d: 220, bf: 110, tf: 9.2,  tw: 5.9, A: 3340,  Ix: 27700000 },
+            240: { d: 240, bf: 120, tf: 9.8,  tw: 6.2, A: 3910,  Ix: 38900000 },
+            270: { d: 270, bf: 135, tf: 10.2, tw: 6.6, A: 4590,  Ix: 57900000 },
+            300: { d: 300, bf: 150, tf: 10.7, tw: 7.1, A: 5380,  Ix: 83600000 },
+            330: { d: 330, bf: 160, tf: 11.5, tw: 7.5, A: 6260,  Ix: 117700000 },
+            360: { d: 360, bf: 170, tf: 12.7, tw: 8.0, A: 7270,  Ix: 162700000 },
+            400: { d: 400, bf: 180, tf: 13.5, tw: 8.6, A: 8450,  Ix: 231300000 },
+            450: { d: 450, bf: 190, tf: 14.6, tw: 9.4, A: 9880,  Ix: 337400000 },
+            500: { d: 500, bf: 200, tf: 16.0, tw: 10.2, A: 11550, Ix: 482000000 },
+            550: { d: 550, bf: 210, tf: 17.2, tw: 11.1, A: 13400, Ix: 671200000 },
             600: { d: 600, bf: 220, tf: 19.0, tw: 12.0, A: 15600, Ix: 920800000 }
         };
 
