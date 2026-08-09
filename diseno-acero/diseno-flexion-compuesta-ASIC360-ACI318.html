@@ -20,6 +20,30 @@
             max-width: 100%;
             height: auto;
         }
+
+        /* Estilos específicos para impresión / exportación a PDF */
+        @media print {
+            body { background-color: #ffffff !important; padding: 0 !important; }
+            body > *:not(#reportModal) { display: none !important; }
+            #reportModal {
+                position: absolute !important;
+                left: 0 !important;
+                top: 0 !important;
+                width: 100% !important;
+                height: auto !important;
+                background: white !important;
+                padding: 0 !important;
+                display: block !important;
+                backdrop-filter: none !important;
+            }
+            #reportModal > div {
+                box-shadow: none !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                padding: 1rem !important;
+            }
+            .no-print { display: none !important; }
+        }
     </style>
 </head>
 <body class="p-4 md:p-8 flex flex-col md:flex-row gap-6 justify-center">
@@ -76,9 +100,15 @@
                 </div>
             </div>
 
-            <div>
-                <label class="block text-sm font-semibold text-gray-700">Pernos (Studs) Ø [mm]</label>
-                <input type="number" id="stud_d" value="19" class="mt-1 w-full rounded-md border-gray-300 shadow-sm p-2 border bg-gray-50">
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700">Pernos (Studs) Ø [mm]</label>
+                    <input type="number" id="stud_d" value="19" class="mt-1 w-full rounded-md border-gray-300 shadow-sm p-2 border bg-gray-50">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700">Carga Serv. (qs) [kN/m]</label>
+                    <input type="number" id="q_service" value="8.0" step="0.5" class="mt-1 w-full rounded-md border-gray-300 shadow-sm p-2 border bg-gray-50">
+                </div>
             </div>
 
             <button onclick="calculateAndDraw()" class="w-full bg-blue-700 hover:bg-blue-800 text-white font-bold py-3 px-4 rounded-md mt-4 transition duration-200 shadow-md">
@@ -89,21 +119,31 @@
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                 Ver Memoria de Cálculo
             </button>
+
+            <button onclick="printReport()" class="w-full bg-slate-700 hover:bg-slate-800 text-white font-bold py-2.5 px-4 rounded-md mt-2 transition duration-200 shadow-md flex justify-center items-center text-sm">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                Imprimir / PDF Memoria
+            </button>
         </div>
     </div>
 
     <!-- Área de Canvas -->
     <div class="w-full md:w-2/3 flex flex-col items-center">
-        <canvas id="resultCanvas" width="1000" height="950" class="w-full"></canvas>
+        <canvas id="resultCanvas" width="1000" height="1000" class="w-full"></canvas>
         <p class="text-sm text-gray-500 mt-2 italic">Representación gráfica de la sección transversal, Eje Neutro Plástico (PNA) y resultados del diseño.</p>
     </div>
 
     <!-- Modal Memoria de Cálculo -->
     <div id="reportModal" class="fixed inset-0 bg-gray-900 bg-opacity-75 hidden z-50 flex justify-center items-start pt-10 pb-10 overflow-y-auto backdrop-blur-sm">
         <div class="bg-white rounded-lg shadow-2xl w-11/12 md:w-3/4 lg:w-[800px] p-6 relative max-h-full overflow-y-auto">
-            <button onclick="closeReport()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-800 transition-colors">
-                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-            </button>
+            <div class="absolute top-4 right-4 flex items-center gap-2 no-print">
+                <button onclick="printReport()" title="Imprimir o Guardar PDF" class="text-slate-500 hover:text-blue-600 transition-colors p-1">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                </button>
+                <button onclick="closeReport()" title="Cerrar" class="text-gray-400 hover:text-gray-800 transition-colors">
+                    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
             <h2 class="text-2xl font-bold mb-4 text-slate-800 border-b-2 border-emerald-500 pb-2 flex items-center">
                 <svg class="w-6 h-6 mr-2 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                 Memoria de Cálculo LRFD
@@ -111,7 +151,11 @@
             <div id="reportContent" class="space-y-4 text-slate-700 text-[15px]">
                 <!-- Contenido dinámico inyectado aquí -->
             </div>
-            <div class="mt-8 flex justify-end border-t pt-4">
+            <div class="mt-8 flex justify-end gap-3 border-t pt-4 no-print">
+                <button onclick="printReport()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-5 rounded transition-colors flex items-center shadow-sm">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                    Guardar / Imprimir PDF
+                </button>
                 <button onclick="closeReport()" class="bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold py-2 px-6 rounded transition-colors">Cerrar Memoria</button>
             </div>
         </div>
@@ -139,6 +183,7 @@
             const h_r = parseFloat(document.getElementById('h_r').value);
             const fc = parseFloat(document.getElementById('fc').value);
             const stud_d = parseFloat(document.getElementById('stud_d').value);
+            const qs = parseFloat(document.getElementById('q_service').value); // kN/m
             
             const beff = Math.min(L / 4, s);
             const tc = t_slab - h_r;
@@ -184,42 +229,58 @@
 
             const Vh = Math.min(C_conc, T_steel);
             const Asc = Math.PI * Math.pow(stud_d, 2) / 4;
-            const Ec = 4700 * Math.sqrt(fc);
+
+            // Módulo de Elasticidad del Hormigón (ACI-318 con wc = 2500 kg/m3)
+            const wc = 2500; // kg/m3
+            const Es = 210000; // MPa (Módulo de elasticidad del acero)
+            const Ec = 0.043 * Math.pow(wc, 1.5) * Math.sqrt(fc); // MPa (ej. f'c=25 -> Ec ~ 26875 MPa)
+            
+            // Módulo de relación n
+            const n_mod = Es / Ec;
+
             const Qn = Math.min(0.5 * Asc * Math.sqrt(fc * Ec), 0.85 * Asc * 450);
             const num_studs_total = Math.ceil(Vh / Qn) * 2;
             const stud_spacing = (L / 2) / (num_studs_total / 2);
 
-            const n_mod = 200000 / Ec;
-            const Actr = (beff * tc) / n_mod;
-            const yc = (ipe.d) + h_r + (tc/2);
-            const ys = ipe.d / 2;
+            // Sección Homogénea Transformada a Acero
+            const Actr = (beff * tc) / n_mod; // Área de hormigón equivalente en acero
+            const yc = ipe.d + h_r + (tc / 2); // Centroide hormigón desde fibra inf IPE
+            const ys = ipe.d / 2; // Centroide acero IPE desde fibra inf IPE
+            
+            // Eje Neutro Elástico desde la fibra inferior del IPE
             const y_tr = ((ipe.A * ys) + (Actr * yc)) / (ipe.A + Actr);
-            const Itr = ipe.Ix + (ipe.A * Math.pow(y_tr - ys, 2)) + (Actr * Math.pow(yc - y_tr, 2));
+            
+            // Inercia Transformada respecto al Eje Neutro Elástico (Steiner)
+            const Ic_propia = (beff / n_mod) * Math.pow(tc, 3) / 12;
+            const Itr = ipe.Ix + (ipe.A * Math.pow(y_tr - ys, 2)) + Ic_propia + (Actr * Math.pow(yc - y_tr, 2));
             const Itr_cm4 = Itr / 10000;
 
-            return { ipeName, ipe, fy, L, s, t_slab, h_r, fc, stud_d, beff, tc, C_conc, T_steel, pna_location_text, Y_pna, a, Mn, phiMn, Aw, Vn, phiVn, Vh, Asc, Ec, Qn, num_studs_total, stud_spacing, n_mod, Actr, yc, ys, y_tr, Itr, Itr_cm4 };
+            // Cálculo de Flecha en Servicio (Carga uniforme distribudida qs N/mm)
+            const qs_Nmm = qs; // kN/m es equivalente a N/mm
+            // Deflexión delta = (5 * qs * L^4) / (384 * Es * Itr)
+            const delta_s = (5 * qs_Nmm * Math.pow(L, 4)) / (384 * Es * Itr); // mm
+            const delta_limit = L / 360; // mm
+
+            return { ipeName, ipe, fy, L, s, t_slab, h_r, fc, stud_d, qs, beff, tc, C_conc, T_steel, pna_location_text, Y_pna, a, Mn, phiMn, Aw, Vn, phiVn, Vh, Asc, Es, Ec, n_mod, Qn, num_studs_total, stud_spacing, Actr, yc, ys, y_tr, Itr, Itr_cm4, delta_s, delta_limit };
         }
 
         function calculateAndDraw() {
             // Ejecutar cálculos
             const calc = getCalculations();
-            // Desestructurar variables para uso en el Canvas
-            const { ipe, beff, tc, t_slab, h_r, stud_d, Y_pna, C_conc, T_steel, pna_location_text, phiMn, phiVn, Vh, Qn, num_studs_total, stud_spacing, Itr_cm4 } = calc;
+            const { ipe, beff, tc, t_slab, h_r, stud_d, Y_pna, C_conc, T_steel, pna_location_text, phiMn, phiVn, Vh, Qn, num_studs_total, stud_spacing, Itr_cm4, Es, Ec, n_mod, delta_s, delta_limit, L, qs } = calc;
 
             // --- 2. RENDERIZADO EN CANVAS ---
             const canvas = document.getElementById('resultCanvas');
             const ctx = canvas.getContext('2d');
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // Dimensiones lógicas para escalar (Toda el área superior para el dibujo)
+            // Dimensiones lógicas para escalar
             const drawWidth = canvas.width;
-            const drawHeight = 420; // Altura fija para la zona de dibujo
+            const drawHeight = 380;
             
-            // Limitar beff visualmente si es gigantesco para que no encoja el perfil IPE a una línea
             const visual_beff = Math.min(beff, ipe.bf * 5); 
-            const total_height = t_slab + ipe.d + 50; // +50 para margen
+            const total_height = t_slab + ipe.d + 50;
 
-            // Escala y Centrado
             const scale = Math.min((drawWidth - 100) / (visual_beff * 1.2), (drawHeight - 60) / total_height);
             const centerX = drawWidth / 2;
             const startY = (drawHeight - (total_height * scale)) / 2 + 30;
@@ -228,67 +289,54 @@
             ctx.translate(centerX, startY);
             ctx.scale(scale, scale);
 
-            // Función Helper para dibujar rectángulos (dentro del área escalada)
             function drawRect(x, y, w, h, fill, stroke, lWidth = 1) {
                 ctx.beginPath();
                 ctx.rect(x, y, w, h);
                 ctx.fillStyle = fill;
                 ctx.fill();
                 if (stroke) {
-                    ctx.lineWidth = lWidth / scale; // Mantener grosor visual
+                    ctx.lineWidth = lWidth / scale;
                     ctx.strokeStyle = stroke;
                     ctx.stroke();
                 }
             }
 
-            // A. Dibujar Losa de Hormigón
+            // Hormigón
             const conc_color = "rgba(209, 213, 219, 0.7)";
             const conc_stroke = "#6b7280";
-            
-            // Parte maciza superior
             drawRect(-visual_beff/2, 0, visual_beff, tc, conc_color, conc_stroke, 2);
-            
-            // Nervios de la chapa
             const ribWidth = ipe.bf * 1.2;
             drawRect(-ribWidth/2, tc, ribWidth, h_r, conc_color, conc_stroke, 2);
 
-            // B. Dibujar Perfil IPE
+            // Acero IPE
             const steel_color = "#3b82f6";
             const steel_stroke = "#1e3a8a";
-            
-            // Ala Superior
             drawRect(-ipe.bf/2, t_slab, ipe.bf, ipe.tf, steel_color, steel_stroke, 2);
-            // Alma
             drawRect(-ipe.tw/2, t_slab + ipe.tf, ipe.tw, ipe.d - 2*ipe.tf, steel_color, steel_stroke, 2);
-            // Ala Inferior
             drawRect(-ipe.bf/2, t_slab + ipe.d - ipe.tf, ipe.bf, ipe.tf, steel_color, steel_stroke, 2);
 
-            // C. Dibujar Conector Stud
+            // Stud
             const stud_color = "#1f2937";
             const studHeight = h_r + (tc * 0.7); 
             const studW = stud_d;
-            // Cuerpo del stud
             drawRect(-studW/2, t_slab - studHeight, studW, studHeight, stud_color, null);
-            // Cabeza del stud
             drawRect(-studW*1.5, t_slab - studHeight, studW*3, studW*0.8, stud_color, null);
 
-            // D. Dibujar Línea del PNA (Eje Neutro Plástico)
+            // PNA
             ctx.beginPath();
             ctx.moveTo(-visual_beff/2 - 20/scale, Y_pna);
             ctx.lineTo(visual_beff/2 + 20/scale, Y_pna);
             ctx.lineWidth = 3 / scale;
-            ctx.strokeStyle = "#dc2626"; // Rojo
+            ctx.strokeStyle = "#dc2626";
             ctx.setLineDash([15/scale, 10/scale]);
             ctx.stroke();
             ctx.setLineDash([]);
 
-            // Etiqueta PNA en el dibujo
             ctx.font = `${18/scale}px sans-serif`;
             ctx.fillStyle = "#dc2626";
             ctx.textAlign = "left";
             ctx.fillText("PNA", visual_beff/2 + 30/scale, Y_pna + 6/scale);
             
-            // Cotas básicas (Acotación visual de la Losa)
             ctx.fillStyle = "#4b5563";
             ctx.font = `${16/scale}px sans-serif`;
             ctx.textAlign = "center";
@@ -296,7 +344,6 @@
             
             ctx.restore();
 
-            // --- FUNCIÓN AUXILIAR PARA RECUADROS ---
             function drawRoundedBox(x, y, w, h, radius, fill, stroke) {
                 ctx.beginPath();
                 ctx.moveTo(x + radius, y);
@@ -316,108 +363,107 @@
                 ctx.stroke();
             }
 
-            // --- LÓGICA DE RECUADROS INFERIORES ---
             const margin = 20;
             const boxWidth = canvas.width - margin * 2;
 
-            // --- 3. RECUADRO: ACLARACIONES GEOMÉTRICAS ---
+            // Recuadro Geometría
             const aclY = drawHeight + 10;
-            const aclHeight = 120;
+            const aclHeight = 110;
             drawRoundedBox(margin, aclY, boxWidth, aclHeight, 10, "#f3f4f6", "#d1d5db");
 
-            ctx.fillStyle = "#1f2937"; // Gris oscuro
+            ctx.fillStyle = "#1f2937";
             ctx.font = "bold 18px Arial";
             ctx.textAlign = "left";
-            ctx.fillText("Aclaración de Parámetros Geométricos:", margin + 20, aclY + 35);
+            ctx.fillText("Aclaración de Parámetros Geométricos:", margin + 20, aclY + 32);
             
-            ctx.fillStyle = "#4b5563"; // Gris medio
+            ctx.fillStyle = "#4b5563";
             ctx.font = "16px Arial";
-            ctx.fillText("• Espesor Losa: Es el espesor TOTAL. Se mide desde el fondo del nervio de la chapa hasta la fibra superior del hormigón.", margin + 20, aclY + 65);
-            ctx.fillText("• Altura Placa (hr): Es la altura exclusiva del nervio (ondulación) de la chapa colaborante.", margin + 20, aclY + 95);
+            ctx.fillText("• Espesor Losa: Es el espesor TOTAL. Se mide desde el fondo del nervio de la chapa hasta la fibra superior del hormigón.", margin + 20, aclY + 60);
+            ctx.fillText("• Altura Placa (hr): Es la altura exclusiva del nervio (ondulación) de la chapa colaborante.", margin + 20, aclY + 86);
 
-            // --- 4. RECUADRO: RESULTADOS LRFD (Dividido en 2 columnas) ---
-            const resY = aclY + aclHeight + 20;
+            // Recuadro Resultados LRFD y ELS (Ampliado)
+            const resY = aclY + aclHeight + 15;
             const resHeight = canvas.height - resY - margin;
             drawRoundedBox(margin, resY, boxWidth, resHeight, 10, "#eff6ff", "#bfdbfe");
 
             ctx.fillStyle = "#1e3a8a";
             ctx.font = "bold 24px Arial";
-            ctx.fillText("Resultados del Diseño LRFD", margin + 20, resY + 45);
+            ctx.fillText("Resultados del Diseño LRFD y ELS", margin + 20, resY + 40);
             
             ctx.beginPath();
-            ctx.moveTo(margin + 20, resY + 60);
-            ctx.lineTo(margin + boxWidth - 20, resY + 60);
+            ctx.moveTo(margin + 20, resY + 52);
+            ctx.lineTo(margin + boxWidth - 20, resY + 52);
             ctx.lineWidth = 2;
             ctx.strokeStyle = "#93c5fd";
             ctx.stroke();
 
-            // Configuración de columnas
             const col1X = margin + 30;
             const col2X = margin + boxWidth / 2 + 20;
-            let textY1 = resY + 100;
-            let textY2 = resY + 100;
+            let textY1 = resY + 85;
+            let textY2 = resY + 85;
 
-            // --- COLUMNA 1 ---
+            // COLUMNA 1
             ctx.font = "bold 18px Arial";
             ctx.fillStyle = "#374151";
             ctx.fillText("1. Flexión Positiva", col1X, textY1);
             
             ctx.font = "16px Courier New";
             ctx.fillStyle = "#4b5563";
-            textY1 += 28; ctx.fillText(`Ancho Efectivo (beff) = ${beff.toFixed(0)} mm`, col1X + 15, textY1);
-            textY1 += 28; ctx.fillText(`Compresión Losa (C)   = ${(C_conc/1000).toFixed(1)} kN`, col1X + 15, textY1);
-            textY1 += 28; ctx.fillText(`Tracción Acero (T)    = ${(T_steel/1000).toFixed(1)} kN`, col1X + 15, textY1);
+            textY1 += 24; ctx.fillText(`Ancho Efectivo (beff) = ${beff.toFixed(0)} mm`, col1X + 15, textY1);
+            textY1 += 24; ctx.fillText(`Compresión Losa (C)   = ${(C_conc/1000).toFixed(1)} kN`, col1X + 15, textY1);
+            textY1 += 24; ctx.fillText(`Tracción Acero (T)    = ${(T_steel/1000).toFixed(1)} kN`, col1X + 15, textY1);
             
-            textY1 += 35;
-            ctx.fillStyle = "#dc2626"; // Resaltar PNA
+            textY1 += 30;
+            ctx.fillStyle = "#dc2626";
             ctx.font = "bold 16px Arial";
             ctx.fillText(`Ubicación E.N.P: ${pna_location_text}`, col1X + 15, textY1);
             
-            textY1 += 35;
-            ctx.fillStyle = "#15803d"; // Verde oscuro
+            textY1 += 30;
+            ctx.fillStyle = "#15803d";
             ctx.font = "bold 20px Arial";
             ctx.fillText(`ϕb·Mn = ${phiMn.toFixed(2)} kN-m`, col1X + 15, textY1);
 
-            textY1 += 50;
+            textY1 += 42;
             ctx.font = "bold 18px Arial";
             ctx.fillStyle = "#374151";
             ctx.fillText("2. Resistencia al Corte", col1X, textY1);
             ctx.font = "bold 20px Arial";
             ctx.fillStyle = "#15803d";
-            textY1 += 35; ctx.fillText(`ϕv·Vn = ${phiVn.toFixed(1)} kN`, col1X + 15, textY1);
+            textY1 += 30; ctx.fillText(`ϕv·Vn = ${phiVn.toFixed(1)} kN`, col1X + 15, textY1);
 
-            // --- COLUMNA 2 ---
+            // COLUMNA 2
             ctx.font = "bold 18px Arial";
             ctx.fillStyle = "#374151";
             ctx.fillText("3. Conexión de Corte (Rasante)", col2X, textY2);
             
             ctx.font = "16px Courier New";
             ctx.fillStyle = "#4b5563";
-            textY2 += 28; ctx.fillText(`Fuerza rasante (Vh) = ${(Vh/1000).toFixed(1)} kN`, col2X + 15, textY2);
-            textY2 += 28; ctx.fillText(`Resistencia x Perno = ${(Qn/1000).toFixed(1)} kN`, col2X + 15, textY2);
+            textY2 += 24; ctx.fillText(`Fuerza rasante (Vh) = ${(Vh/1000).toFixed(1)} kN`, col2X + 15, textY2);
+            textY2 += 24; ctx.fillText(`Resistencia x Perno = ${(Qn/1000).toFixed(1)} kN`, col2X + 15, textY2);
             
             ctx.font = "bold 18px Arial";
             ctx.fillStyle = "#1e40af";
-            textY2 += 35; ctx.fillText(`Nº Total Pernos = ${num_studs_total}`, col2X + 15, textY2);
+            textY2 += 30; ctx.fillText(`Nº Total Pernos = ${num_studs_total}`, col2X + 15, textY2);
             
             ctx.font = "16px Arial";
             ctx.fillStyle = "#6b7280";
-            textY2 += 25; ctx.fillText(`Separación prom.  ≈ ${stud_spacing.toFixed(0)} mm`, col2X + 15, textY2);
+            textY2 += 22; ctx.fillText(`Separación prom.  ≈ ${stud_spacing.toFixed(0)} mm`, col2X + 15, textY2);
 
-            textY2 += 50;
+            textY2 += 42;
             ctx.font = "bold 18px Arial";
             ctx.fillStyle = "#374151";
-            ctx.fillText("4. Estado Límite de Servicio", col2X, textY2);
+            ctx.fillText("4. ELS: Deformación y Rigidez", col2X, textY2);
             
             ctx.font = "16px Courier New";
             ctx.fillStyle = "#4b5563";
-            textY2 += 28; ctx.fillText(`Inercia Transf. (Itr) = ${Itr_cm4.toFixed(0)} cm⁴`, col2X + 15, textY2);
+            textY2 += 24; ctx.fillText(`Relación Modular (n) = ${n_mod.toFixed(2)}`, col2X + 15, textY2);
+            textY2 += 24; ctx.fillText(`Inercia Transf (Itr) = ${Itr_cm4.toFixed(0)} cm⁴`, col2X + 15, textY2);
+            textY2 += 24; ctx.fillText(`Flecha serv. (δs)   = ${delta_s.toFixed(2)} mm`, col2X + 15, textY2);
             
-            textY2 += 45;
-            ctx.font = "italic 14px Arial";
-            ctx.fillStyle = "#9ca3af";
-            ctx.fillText("* Nota: Para flexión negativa (apoyos), el ala inferior", col2X, textY2);
-            ctx.fillText("  comprime. Verificar LTB del perfil IPE.", col2X, textY2 + 20);
+            const isOkDelta = delta_s <= delta_limit;
+            ctx.font = "bold 16px Arial";
+            ctx.fillStyle = isOkDelta ? "#15803d" : "#dc2626";
+            textY2 += 28; ctx.fillText(`Límite δ (L/360) = ${delta_limit.toFixed(1)} mm [${isOkDelta ? "CUMPLE" : "NO CUMPLE"}]`, col2X + 15, textY2);
         }
 
         // --- 3. LÓGICA DE LA MEMORIA DE CÁLCULO ---
@@ -426,24 +472,32 @@
                 <div class="bg-slate-50 p-4 rounded-md border border-slate-200 mb-6">
                     <h3 class="font-bold text-slate-800 mb-3 uppercase tracking-wider text-sm">1. Parámetros de Diseño</h3>
                     <div class="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
-                        <div><span class="font-semibold text-slate-500">Perfil Acero:</span> ${c.ipeName} ($F_y = ${c.fy}$ MPa)</div>
-                        <div><span class="font-semibold text-slate-500">Hormigón Losa:</span> $f'_c = ${c.fc}$ MPa</div>
+                        <div><span class="font-semibold text-slate-500">Perfil Acero:</span> ${c.ipeName} ($F_y = ${c.fy}$ MPa, $E_s = 210.000$ MPa)</div>
+                        <div><span class="font-semibold text-slate-500">Hormigón Losa:</span> $f'_c = ${c.fc}$ MPa ($w_c = 2500$ kg/m³)</div>
                         <div><span class="font-semibold text-slate-500">Luz Viga ($L$):</span> ${c.L/1000} m</div>
                         <div><span class="font-semibold text-slate-500">Separación ($s$):</span> ${c.s/1000} m</div>
                         <div><span class="font-semibold text-slate-500">Espesor Losa ($t$):</span> ${c.t_slab} mm</div>
                         <div><span class="font-semibold text-slate-500">Altura Placa ($h_r$):</span> ${c.h_r} mm</div>
+                        <div><span class="font-semibold text-slate-500">Carga Servicio ($q_s$):</span> ${c.qs} kN/m</div>
                     </div>
                 </div>
 
                 <h3 class="font-bold text-slate-800 border-b pb-1 mt-6 text-lg">2. Propiedades de la Sección Mixta</h3>
-                <p class="mt-2">Se define el ancho efectivo de la losa colaborante ($b_{eff}$) y el espesor del hormigón macizo sobre los nervios de la chapa ($t_c$):</p>
+                <p class="mt-2">Se define el ancho efectivo ($b_{eff}$) y espesor del hormigón macizo sobre los nervios ($t_c$):</p>
                 <div class="my-3 p-3 bg-white border rounded shadow-sm overflow-x-auto">
                     $$b_{eff} = \\min\\left(\\frac{L}{4}, s\\right) = \\min\\left(\\frac{${c.L}}{4}, ${c.s}\\right) = ${c.beff.toFixed(0)} \\text{ mm}$$
                     $$t_c = t_{losa} - h_r = ${c.t_slab} - ${c.h_r} = ${c.tc} \\text{ mm}$$
                 </div>
 
-                <h3 class="font-bold text-slate-800 border-b pb-1 mt-6 text-lg">3. Diseño a Flexión (Eje Neutro Plástico)</h3>
-                <p class="mt-2">Se comparan las capacidades axiales máximas del hormigón a compresión ($C$) y del perfil de acero a tracción ($T$) para determinar el equilibrio:</p>
+                <h3 class="font-bold text-slate-800 border-b pb-1 mt-6 text-lg">3. Módulo de Elasticidad y Relación Modular ($n$)</h3>
+                <p class="mt-2">Se determina el módulo de elasticidad del hormigón $E_c$ según la norma ACI-318 y el ratio $n$ para homogeneizar la sección a acero:</p>
+                <div class="my-3 p-3 bg-white border rounded shadow-sm overflow-x-auto">
+                    $$E_c = 0.043 \\cdot w_c^{1.5} \\cdot \\sqrt{f'_c} = 0.043 \\times 2500^{1.5} \\times \\sqrt{${c.fc}} = ${c.Ec.toFixed(0)} \\text{ MPa}$$
+                    $$n = \\frac{E_s}{E_c} = \\frac{210000}{${c.Ec.toFixed(0)}} = ${c.n_mod.toFixed(2)}$$
+                </div>
+
+                <h3 class="font-bold text-slate-800 border-b pb-1 mt-6 text-lg">4. Diseño a Flexión (Eje Neutro Plástico)</h3>
+                <p class="mt-2">Se comparan las capacidades axiales de compresión en el hormigón ($C$) y tracción en el acero ($T$):</p>
                 <div class="my-3 p-3 bg-white border rounded shadow-sm overflow-x-auto">
                     $$C = 0.85 f'_c b_{eff} t_c = 0.85 \\times ${c.fc} \\times ${c.beff.toFixed(0)} \\times ${c.tc} = ${(c.C_conc/1000).toFixed(1)} \\text{ kN}$$
                     $$T = A_s F_y = ${c.ipe.A} \\times ${c.fy} = ${(c.T_steel/1000).toFixed(1)} \\text{ kN}$$
@@ -452,31 +506,28 @@
 
             if (c.C_conc >= c.T_steel) {
                 html += `
-                <p>Dado que $C \\ge T$, el Eje Neutro Plástico (PNA) se ubica en la <strong>Losa de Hormigón</strong>. La profundidad del bloque de compresiones equivalente ($a$) es:</p>
+                <p>Dado que $C \\ge T$, el Eje Neutro Plástico (PNA) se ubica en la <strong>Losa de Hormigón</strong>. La profundidad $a$ del bloque equivalente es:</p>
                 <div class="my-3 p-3 bg-white border rounded shadow-sm overflow-x-auto">
                     $$a = \\frac{T}{0.85 f'_c b_{eff}} = \\frac{${(c.T_steel).toFixed(0)}}{0.85 \\times ${c.fc} \\times ${c.beff.toFixed(0)}} = ${c.a.toFixed(2)} \\text{ mm}$$
                 </div>
-                <p>El momento flexionante nominal compuesto ($M_n$) se determina multiplicando la fuerza por su brazo de palanca interno:</p>
+                <p>El momento flexionante nominal compuesto ($M_n$) vale:</p>
                 <div class="my-3 p-3 bg-white border rounded shadow-sm overflow-x-auto">
-                    $$M_n = T \\left( \\frac{d}{2} + h_r + t_c - \\frac{a}{2} \\right)$$
-                    $$M_n = ${(c.T_steel/1000).toFixed(1)} \\left( \\frac{${c.ipe.d}}{2} + ${c.h_r} + ${c.tc} - \\frac{${c.a.toFixed(2)}}{2} \\right) \\times 10^{-3} = ${(c.Mn/1e6).toFixed(2)} \\text{ kN-m}$$
+                    $$M_n = T \\left( \\frac{d}{2} + h_r + t_c - \\frac{a}{2} \\right) = ${(c.Mn/1e6).toFixed(2)} \\text{ kN-m}$$
                 </div>`;
             } else {
                  html += `
-                <p>Dado que $C < T$, la losa no es capaz de equilibrar toda la tracción, por lo que el PNA desciende hacia el <strong>Perfil de Acero</strong> (${c.pna_location_text}).</p>
+                <p>Dado que $C < T$, el PNA desciende hacia el <strong>Perfil de Acero</strong> (${c.pna_location_text}).</p>
                 <div class="my-3 p-3 bg-white border rounded shadow-sm overflow-x-auto">
                     $$M_n \\approx ${(c.Mn/1e6).toFixed(2)} \\text{ kN-m}$$
                 </div>`;
             }
 
             html += `
-                <p class="font-semibold mt-4">Resistencia de diseño LRFD a flexión ($\\phi_b = 0.90$):</p>
                 <div class="my-3 p-4 bg-emerald-50 text-emerald-900 border-l-4 border-emerald-500 rounded shadow-sm font-bold text-center text-lg">
                     $$\\phi_b M_n = 0.90 \\times ${(c.Mn/1e6).toFixed(2)} = ${c.phiMn.toFixed(2)} \\text{ kN-m}$$
                 </div>
 
-                <h3 class="font-bold text-slate-800 border-b pb-1 mt-6 text-lg">4. Diseño a Corte</h3>
-                <p class="mt-2">La contribución de la losa se ignora. La resistencia depende del área del alma ($A_w$) del perfil metálico ($C_v = 1.0$):</p>
+                <h3 class="font-bold text-slate-800 border-b pb-1 mt-6 text-lg">5. Diseño a Corte</h3>
                 <div class="my-3 p-3 bg-white border rounded shadow-sm overflow-x-auto">
                     $$V_n = 0.6 F_y A_w C_v = 0.6 \\times ${c.fy} \\times (${c.ipe.d} \\times ${c.ipe.tw}) \\times 1.0 = ${(c.Vn/1000).toFixed(1)} \\text{ kN}$$
                 </div>
@@ -484,32 +535,43 @@
                     $$\\phi_v V_n = 1.0 \\times ${(c.Vn/1000).toFixed(1)} = ${c.phiVn.toFixed(1)} \\text{ kN}$$
                 </div>
 
-                <h3 class="font-bold text-slate-800 border-b pb-1 mt-6 text-lg">5. Conectores de Corte (Studs)</h3>
-                <p class="mt-2">Para lograr interacción total, se diseña para la fuerza rasante crítica $V_h$ en la interfaz. La resistencia nominal de un conector es $Q_n$:</p>
+                <h3 class="font-bold text-slate-800 border-b pb-1 mt-6 text-lg">6. Conectores de Corte (Rasante)</h3>
                 <div class="my-3 p-3 bg-white border rounded shadow-sm overflow-x-auto">
-                    $$V_h = \\min(C, T) = \\min(${(c.C_conc/1000).toFixed(1)}, ${(c.T_steel/1000).toFixed(1)}) = ${(c.Vh/1000).toFixed(1)} \\text{ kN}$$
-                    $$Q_n \\approx 0.5 A_{sc} \\sqrt{f'_c E_c} \\le 0.85 A_{sc} F_u$$
-                    $$Q_n = ${(c.Qn/1000).toFixed(1)} \\text{ kN/perno}$$
+                    $$V_h = \\min(C, T) = ${(c.Vh/1000).toFixed(1)} \\text{ kN}$$
+                    $$Q_n \\approx 0.5 A_{sc} \\sqrt{f'_c E_c} = ${(c.Qn/1000).toFixed(1)} \\text{ kN/perno}$$
                 </div>
-                <p>Número total de pernos requeridos en la viga (asumiendo simetría de cargas):</p>
                 <div class="my-3 p-3 bg-slate-100 border border-slate-300 rounded text-center font-bold text-lg text-slate-800">
                     $$N_{total} = \\left\\lceil \\frac{V_h}{Q_n} \\right\\rceil \\times 2 = ${c.num_studs_total} \\text{ conectores}$$
+                </div>
+
+                <h3 class="font-bold text-slate-800 border-b pb-1 mt-6 text-lg">7. Estado Límite de Servicio (Inercia Transformada y Deflexión)</h3>
+                <p class="mt-2">Homogeneización de la sección aplicando el Teorema de Steiner respecto al Eje Neutro Elástico ($y_{tr}$):</p>
+                <div class="my-3 p-3 bg-white border rounded shadow-sm overflow-x-auto">
+                    $$A_{c,tr} = \\frac{b_{eff} \\cdot t_c}{n} = \\frac{${c.beff.toFixed(0)} \\times ${c.tc}}{${c.n_mod.toFixed(2)}} = ${c.Actr.toFixed(1)} \\text{ mm}^2$$
+                    $$y_{tr} = \\frac{A_s \\cdot y_s + A_{c,tr} \\cdot y_c}{A_s + A_{c,tr}} = ${c.y_tr.toFixed(2)} \\text{ mm desde la fibra inf. IPE}$$
+                    $$I_{tr} = I_s + A_s (y_{tr} - y_s)^2 + I_{c,propia} + A_{c,tr} (y_c - y_tr)^2 = ${c.Itr_cm4.toFixed(0)} \\text{ cm}^4$$
+                </div>
+
+                <p class="mt-2">Cálculo de la deflexión en servicio para carga distribuida $q_s = ${c.qs}$ kN/m ($L = ${c.L/1000}$ m):</p>
+                <div class="my-3 p-3 bg-white border rounded shadow-sm overflow-x-auto">
+                    $$\\delta_s = \\frac{5 \\cdot q_s \\cdot L^4}{384 \\cdot E_s \\cdot I_{tr}} = \\frac{5 \\times ${c.qs} \\times (${c.L})^4}{384 \\times 210000 \\times (${c.Itr.toFixed(0)})} = ${c.delta_s.toFixed(2)} \\text{ mm}$$
+                    $$\\delta_{lim} = \\frac{L}{360} = \\frac{${c.L}}{360} = ${c.delta_limit.toFixed(2)} \\text{ mm}$$
+                </div>
+                <div class="my-3 p-4 ${c.delta_s <= c.delta_limit ? 'bg-emerald-50 text-emerald-900 border-emerald-500' : 'bg-red-50 text-red-900 border-red-500'} border-l-4 rounded shadow-sm font-bold text-center">
+                    $$\\delta_s = ${c.delta_s.toFixed(2)} \\text{ mm} \\le \\delta_{lim} = ${c.delta_limit.toFixed(2)} \\text{ mm} \\quad \\Rightarrow \\quad \\text{${c.delta_s <= c.delta_limit ? 'CUMPLE ELS' : 'NO CUMPLE ELS'}}$$
                 </div>
             `;
             return html;
         }
 
         function showReport() {
-            // 1. Obtener datos y generar HTML
             const calc = getCalculations();
             const contentDiv = document.getElementById('reportContent');
             contentDiv.innerHTML = generateReportHTML(calc);
             
-            // 2. Mostrar Modal
             document.getElementById('reportModal').classList.remove('hidden');
-            document.body.style.overflow = 'hidden'; // Prevenir scroll de fondo
+            document.body.style.overflow = 'hidden';
 
-            // 3. Renderizar Ecuaciones Matemáticas con KaTeX
             if (window.renderMathInElement) {
                 renderMathInElement(contentDiv, {
                     delimiters: [
@@ -523,7 +585,17 @@
 
         function closeReport() {
             document.getElementById('reportModal').classList.add('hidden');
-            document.body.style.overflow = 'auto'; // Restaurar scroll
+            document.body.style.overflow = 'auto';
+        }
+
+        function printReport() {
+            const modal = document.getElementById('reportModal');
+            if (modal.classList.contains('hidden')) {
+                showReport();
+            }
+            setTimeout(() => {
+                window.print();
+            }, 300);
         }
 
         // Auto-calcular al cargar
