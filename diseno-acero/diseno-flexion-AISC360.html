@@ -1,0 +1,1138 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diseño Estructural de Vigas IPE - AISC 360 / NCh427/1</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js for Capacity Charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- KaTeX for Math Equations -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0f7ff',
+                            100: '#e0effe',
+                            500: '#0284c7',
+                            600: '#0369a1',
+                            700: '#075985',
+                            800: '#0c4a6e',
+                            900: '#0f172a'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @media print {
+            .no-print { display: none !important; }
+            .print-only { display: block !important; }
+            body { background: white; color: black; font-size: 11pt; }
+            .card-print { border: 1px solid #ccc !important; box-shadow: none !important; page-break-inside: avoid; }
+        }
+        .tab-btn.active {
+            border-bottom: 3px solid #0284c7;
+            color: #0284c7;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col font-sans antialiased">
+    
+    <!-- Top Navigation Header -->
+    <header class="bg-slate-900 text-white shadow-lg sticky top-0 z-50 no-print">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-wrap justify-between items-center gap-4">
+            <div class="flex items-center space-x-3">
+                <div class="bg-sky-600 p-2.5 rounded-xl shadow-md">
+                    <i class="fa-solid me-1 fa-cubes-stacked text-xl text-white"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold tracking-tight text-white flex items-center gap-2">
+                        Diseño de Vigas IPE 
+                        <span class="text-xs font-semibold bg-sky-500/30 text-sky-300 border border-sky-400/40 px-2 py-0.5 rounded-full">AISC 360-16 / NCh427/1</span>
+                    </h1>
+                    <p class="text-xs text-slate-400">Verificación a Flexión, Corte, Deflexión y Compresión Axial</p>
+                </div>
+            </div>
+
+            <div class="flex items-center space-x-3">
+                <!-- Design Method Selector -->
+                <div class="bg-slate-800 p-1 rounded-lg border border-slate-700 flex items-center text-xs font-medium">
+                    <button id="btnMethodLRFD" onclick="setMethod('LRFD')" class="px-3 py-1.5 rounded-md transition-all duration-150 bg-sky-600 text-white shadow">LRFD (&phi;)</button>
+                    <button id="btnMethodASD" onclick="setMethod('ASD')" class="px-3 py-1.5 rounded-md text-slate-400 hover:text-white transition-all duration-150">ASD (&Omega;)</button>
+                </div>
+
+                <!-- Print Report Button -->
+                <button onclick="window.print()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold px-3 py-2 rounded-lg shadow flex items-center gap-1.5 transition">
+                    <i class="fa-solid fa-file-pdf"></i>
+                    <span>Imprimir Reporte</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 w-full grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <!-- SIDEBAR CONTROLS (4 cols) -->
+        <aside class="lg:col-span-4 space-y-5 no-print">
+            
+            <!-- Profile & Steel Parameters -->
+            <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 space-y-4">
+                <h2 class="text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2 border-b border-slate-100 pb-2">
+                    <i class="fa-solid fa-layer-group text-sky-600"></i>
+                    Perfil y Material
+                </h2>
+
+                <!-- IPE Profile Selection -->
+                <div>
+                    <label for="selectProfile" class="block text-xs font-semibold text-slate-700 mb-1">Perfil IPE:</label>
+                    <select id="selectProfile" onchange="calculateAll()" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-sky-500 focus:border-sky-500 p-2.5 font-medium">
+                        <!-- Filled dynamically in JS -->
+                    </select>
+                </div>
+
+                <!-- Steel Grade Selection -->
+                <div>
+                    <label for="selectSteel" class="block text-xs font-semibold text-slate-700 mb-1">Calidad de Acero:</label>
+                    <select id="selectSteel" onchange="handleSteelChange()" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-sky-500 focus:border-sky-500 p-2.5">
+                        <option value="A36">ASTM A36 / A37-24ES (Fy = 250 MPa, Fu = 400 MPa)</option>
+                        <option value="A572_50" selected>ASTM A572 Gr.50 / S355 / A52-34ES (Fy = 345 MPa, Fu = 450 MPa)</option>
+                        <option value="S235">Eurocódigo S235 (Fy = 235 MPa)</option>
+                        <option value="S275">Eurocódigo S275 (Fy = 275 MPa)</option>
+                        <option value="CUSTOM">Personalizado...</option>
+                    </select>
+                </div>
+
+                <!-- Custom Fy input (hidden unless CUSTOM selected) -->
+                <div id="customFyContainer" class="hidden grid grid-cols-2 gap-3 pt-1">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-600">Fy (MPa):</label>
+                        <input type="number" id="inputCustomFy" value="345" oninput="calculateAll()" class="w-full bg-slate-50 border border-slate-300 text-xs rounded-lg p-2">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-600">Fu (MPa):</label>
+                        <input type="number" id="inputCustomFu" value="450" oninput="calculateAll()" class="w-full bg-slate-50 border border-slate-300 text-xs rounded-lg p-2">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Geometry & Lengths -->
+            <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 space-y-4">
+                <h2 class="text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2 border-b border-slate-100 pb-2">
+                    <i class="fa-solid fa-ruler-combined text-sky-600"></i>
+                    Geometría y Arriostramiento
+                </h2>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1" title="Longitud total de la viga">Luz Total <i>L</i> (m):</label>
+                        <input type="number" id="inputL" value="6.0" step="0.1" min="0.5" oninput="syncLengths(); calculateAll();" class="w-full bg-slate-50 border border-slate-300 text-sm rounded-lg p-2 text-center font-semibold">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1" title="Longitud no arriostrada para LTB">Arriostr. <i>L</i><sub>b</sub> (m):</label>
+                        <input type="number" id="inputLb" value="3.0" step="0.1" min="0.1" oninput="calculateAll()" class="w-full bg-slate-50 border border-slate-300 text-sm rounded-lg p-2 text-center font-semibold">
+                    </div>
+                </div>
+
+                <!-- Cb Factor Control -->
+                <div>
+                    <div class="flex justify-between items-center mb-1">
+                        <label class="text-xs font-semibold text-slate-700">Factor <i>C</i><sub>b</sub> (Gradiente de Momento):</label>
+                        <span id="cbValueDisplay" class="text-xs font-bold text-sky-600">1.00</span>
+                    </div>
+                    <select id="selectCbPreset" onchange="handleCbPreset()" class="w-full bg-slate-50 border border-slate-300 text-xs rounded-lg p-2 mb-2">
+                        <option value="1.0">Momento Uniforme / Conservador (C<sub>b</sub> = 1.00)</option>
+                        <option value="1.14">Carga Distribuida Uniforme - Apoyo Simple (C<sub>b</sub> = 1.14)</option>
+                        <option value="1.32">Carga Puntual al Centro - Apoyo Simple (C<sub>b</sub> = 1.32)</option>
+                        <option value="1.67">Momento Lineal en Extremos (C<sub>b</sub> = 1.67)</option>
+                        <option value="CUSTOM">Valor Manual...</option>
+                    </select>
+                    <input type="number" id="inputCbManual" value="1.00" step="0.05" min="1.0" max="3.0" oninput="calculateAll()" class="hidden w-full bg-slate-50 border border-slate-300 text-xs rounded-lg p-2 text-center">
+                </div>
+
+                <!-- Effective Length Factors Kx, Ky for Compression -->
+                <div class="border-t border-slate-100 pt-3">
+                    <span class="block text-xs font-semibold text-slate-700 mb-2">Factores de Longitud Efectiva <i>K</i> (Compresión):</span>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs text-slate-500">Eje Fuerte <i>K</i><sub>x</sub>:</label>
+                            <input type="number" id="inputKx" value="1.0" step="0.1" min="0.5" max="3.0" oninput="calculateAll()" class="w-full bg-slate-50 border border-slate-300 text-xs rounded-lg p-2 text-center">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-slate-500">Eje Débil <i>K</i><sub>y</sub>:</label>
+                            <input type="number" id="inputKy" value="1.0" step="0.1" min="0.5" max="3.0" oninput="calculateAll()" class="w-full bg-slate-50 border border-slate-300 text-xs rounded-lg p-2 text-center">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Applied Loads / Demands -->
+            <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 space-y-4">
+                <h2 class="text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2 border-b border-slate-100 pb-2">
+                    <i class="fa-solid fa-weight-hanging text-sky-600"></i>
+                    Solicitaciones Aplicadas
+                </h2>
+
+                <div class="space-y-3">
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Flexión <i>M</i><sub>ux</sub> (<i>M</i><sub>ax</sub>):</label>
+                            <div class="relative">
+                                <input type="number" id="inputMu" value="85.0" step="1" min="0" oninput="calculateAll()" class="w-full bg-slate-50 border border-slate-300 text-sm rounded-lg p-2 pr-12 text-right font-medium">
+                                <span class="absolute right-2 top-2 text-xs text-slate-400">kN·m</span>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Corte <i>V</i><sub>uy</sub> (<i>V</i><sub>ay</sub>):</label>
+                            <div class="relative">
+                                <input type="number" id="inputVu" value="45.0" step="1" min="0" oninput="calculateAll()" class="w-full bg-slate-50 border border-slate-300 text-sm rounded-lg p-2 pr-10 text-right font-medium">
+                                <span class="absolute right-2 top-2 text-xs text-slate-400">kN</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Compresión <i>P</i><sub>u</sub> (<i>P</i><sub>a</sub>):</label>
+                            <div class="relative">
+                                <input type="number" id="inputPu" value="120.0" step="5" min="0" oninput="calculateAll()" class="w-full bg-slate-50 border border-slate-300 text-sm rounded-lg p-2 pr-10 text-right font-medium">
+                                <span class="absolute right-2 top-2 text-xs text-slate-400">kN</span>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Carga Servicio <i>q</i><sub>s</sub>:</label>
+                            <div class="relative">
+                                <input type="number" id="inputQs" value="15.0" step="1" min="0" oninput="calculateAll()" class="w-full bg-slate-50 border border-slate-300 text-sm rounded-lg p-2 pr-12 text-right font-medium">
+                                <span class="absolute right-2 top-2 text-xs text-slate-400">kN/m</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Deflection Limit Selection -->
+                    <div>
+                        <label for="selectDeflLimit" class="block text-xs font-semibold text-slate-700 mb-1">Límite Deformación Admisible:</label>
+                        <select id="selectDeflLimit" onchange="calculateAll()" class="w-full bg-slate-50 border border-slate-300 text-xs rounded-lg p-2">
+                            <option value="360" selected>L / 360 (Pisos residenciales / oficinas)</option>
+                            <option value="240">L / 240 (Cubiertas generales)</option>
+                            <option value="500">L / 500 (Elementos frágiles / cielos acristalados)</option>
+                            <option value="180">L / 180 (Cubiertas industriales livianas)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- MAIN DISPLAY RESULTS (8 cols) -->
+        <section class="lg:col-span-8 space-y-6">
+            
+            <!-- Top Summary Indicators Grid -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                
+                <!-- Flexure Card -->
+                <div id="cardFlexure" class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col justify-between transition-all">
+                    <div>
+                        <div class="flex justify-between items-start mb-1">
+                            <span class="text-xs font-bold text-slate-500 uppercase">Flexión (<i>M</i><sub>n</sub>)</span>
+                            <span id="badgeFlexure" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">OK</span>
+                        </div>
+                        <div class="text-lg font-black text-slate-800" id="valFlexureCap">0.0 kN·m</div>
+                        <div class="text-xs text-slate-500 mt-1" id="valFlexureDemand">Mu: 0.0 kN·m</div>
+                    </div>
+                    <div class="mt-3">
+                        <div class="flex justify-between text-[11px] font-semibold text-slate-600 mb-1">
+                            <span>D/C:</span>
+                            <span id="ratioFlexureVal">0%</span>
+                        </div>
+                        <div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+                            <div id="barFlexure" class="bg-emerald-500 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Shear Card -->
+                <div id="cardShear" class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col justify-between transition-all">
+                    <div>
+                        <div class="flex justify-between items-start mb-1">
+                            <span class="text-xs font-bold text-slate-500 uppercase">Corte (<i>V</i><sub>n</sub>)</span>
+                            <span id="badgeShear" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">OK</span>
+                        </div>
+                        <div class="text-lg font-black text-slate-800" id="valShearCap">0.0 kN</div>
+                        <div class="text-xs text-slate-500 mt-1" id="valShearDemand">Vu: 0.0 kN</div>
+                    </div>
+                    <div class="mt-3">
+                        <div class="flex justify-between text-[11px] font-semibold text-slate-600 mb-1">
+                            <span>D/C:</span>
+                            <span id="ratioShearVal">0%</span>
+                        </div>
+                        <div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+                            <div id="barShear" class="bg-emerald-500 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Deflection Card -->
+                <div id="cardDeflection" class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col justify-between transition-all">
+                    <div>
+                        <div class="flex justify-between items-start mb-1">
+                            <span class="text-xs font-bold text-slate-500 uppercase">Deflexión (&delta;)</span>
+                            <span id="badgeDeflection" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">OK</span>
+                        </div>
+                        <div class="text-lg font-black text-slate-800" id="valDeflectionCalc">0.0 mm</div>
+                        <div class="text-xs text-slate-500 mt-1" id="valDeflectionAdm">Adm: 0.0 mm</div>
+                    </div>
+                    <div class="mt-3">
+                        <div class="flex justify-between text-[11px] font-semibold text-slate-600 mb-1">
+                            <span>Uso:</span>
+                            <span id="ratioDeflectionVal">0%</span>
+                        </div>
+                        <div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+                            <div id="barDeflection" class="bg-emerald-500 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Compression Card -->
+                <div id="cardCompression" class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col justify-between transition-all">
+                    <div>
+                        <div class="flex justify-between items-start mb-1">
+                            <span class="text-xs font-bold text-slate-500 uppercase">Compresión (<i>P</i><sub>n</sub>)</span>
+                            <span id="badgeCompression" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">OK</span>
+                        </div>
+                        <div class="text-lg font-black text-slate-800" id="valCompressionCap">0.0 kN</div>
+                        <div class="text-xs text-slate-500 mt-1" id="valCompressionDemand">Pu: 0.0 kN</div>
+                    </div>
+                    <div class="mt-3">
+                        <div class="flex justify-between text-[11px] font-semibold text-slate-600 mb-1">
+                            <span>D/C:</span>
+                            <span id="ratioCompressionVal">0%</span>
+                        </div>
+                        <div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+                            <div id="barCompression" class="bg-emerald-500 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Main Content Tab Navigation -->
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="border-b border-slate-200 bg-slate-50 px-4 flex space-x-6 text-sm font-medium no-print">
+                    <button onclick="switchTab('tabOverview')" id="btnTabOverview" class="tab-btn py-3.5 active flex items-center gap-2">
+                        <i class="fa-solid fa-chart-pie"></i> Visión General y Geometría
+                    </button>
+                    <button onclick="switchTab('tabCharts')" id="btnTabCharts" class="tab-btn py-3.5 flex items-center gap-2">
+                        <i class="fa-solid fa-chart-line"></i> Curvas de Capacidad
+                    </button>
+                    <button onclick="switchTab('tabMemory')" id="btnTabMemory" class="tab-btn py-3.5 flex items-center gap-2">
+                        <i class="fa-solid fa-calculator"></i> Memoria de Cálculo
+                    </button>
+                    <button onclick="switchTab('tabCatalog')" id="btnTabCatalog" class="tab-btn py-3.5 flex items-center gap-2">
+                        <i class="fa-solid fa-table"></i> Catálogo IPE
+                    </button>
+                </div>
+
+                <!-- TAB 1: OVERVIEW & SECTION DRAWING -->
+                <div id="tabOverview" class="p-6 space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+                        
+                        <!-- SVG Cross-Section Render -->
+                        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 flex flex-col items-center justify-center min-h-[300px]">
+                            <h3 class="text-xs font-bold text-slate-500 uppercase mb-2">Sección Transversal <span id="drawProfileTitle" class="text-sky-600 font-black">IPE 300</span></h3>
+                            <div id="svgContainer" class="w-full h-64 flex justify-center items-center">
+                                <!-- SVG generated in JS -->
+                            </div>
+                        </div>
+
+                        <!-- Quick Properties List -->
+                        <div class="space-y-3">
+                            <h3 class="text-sm font-bold text-slate-800 border-b pb-1">Propiedades Geométricas e Inerciales</h3>
+                            <div class="grid grid-cols-2 gap-x-4 gap-y-2 text-xs">
+                                <div class="flex justify-between bg-slate-50 p-2 rounded">
+                                    <span class="text-slate-500">Altura <i>h</i>:</span>
+                                    <span id="propH" class="font-bold">300 mm</span>
+                                </div>
+                                <div class="flex justify-between bg-slate-50 p-2 rounded">
+                                    <span class="text-slate-500">Ancho <i>b</i>:</span>
+                                    <span id="propB" class="font-bold">150 mm</span>
+                                </div>
+                                <div class="flex justify-between bg-slate-50 p-2 rounded">
+                                    <span class="text-slate-500">Espesor Alma <i>t</i><sub>w</sub>:</span>
+                                    <span id="propTw" class="font-bold">7.1 mm</span>
+                                </div>
+                                <div class="flex justify-between bg-slate-50 p-2 rounded">
+                                    <span class="text-slate-500">Espesor Ala <i>t</i><sub>f</sub>:</span>
+                                    <span id="propTf" class="font-bold">10.7 mm</span>
+                                </div>
+                                <div class="flex justify-between bg-slate-50 p-2 rounded">
+                                    <span class="text-slate-500">Área <i>A</i><sub>g</sub>:</span>
+                                    <span id="propA" class="font-bold">53.8 cm²</span>
+                                </div>
+                                <div class="flex justify-between bg-slate-50 p-2 rounded">
+                                    <span class="text-slate-500">Peso Propio:</span>
+                                    <span id="propWeight" class="font-bold">42.2 kg/m</span>
+                                </div>
+                                <div class="flex justify-between bg-slate-50 p-2 rounded">
+                                    <span class="text-slate-500">Inercia <i>I</i><sub>x</sub>:</span>
+                                    <span id="propIx" class="font-bold">8,356 cm⁴</span>
+                                </div>
+                                <div class="flex justify-between bg-slate-50 p-2 rounded">
+                                    <span class="text-slate-500">Mód. Plástico <i>Z</i><sub>x</sub>:</span>
+                                    <span id="propZx" class="font-bold">628 cm³</span>
+                                </div>
+                                <div class="flex justify-between bg-slate-50 p-2 rounded">
+                                    <span class="text-slate-500">Radio Giro <i>r</i><sub>x</sub>:</span>
+                                    <span id="propRx" class="font-bold">12.5 cm</span>
+                                </div>
+                                <div class="flex justify-between bg-slate-50 p-2 rounded">
+                                    <span class="text-slate-500">Radio Giro <i>r</i><sub>y</sub>:</span>
+                                    <span id="propRy" class="font-bold">3.35 cm</span>
+                                </div>
+                            </div>
+
+                            <!-- Classification Badges -->
+                            <div class="pt-2">
+                                <span class="text-xs font-semibold text-slate-700">Clasificación de Sección (AISC B4):</span>
+                                <div class="flex gap-2 mt-1">
+                                    <span id="badgeFlangeCompact" class="text-xs px-2.5 py-1 rounded-md bg-sky-100 text-sky-800 font-semibold">Ala Compacta</span>
+                                    <span id="badgeWebCompact" class="text-xs px-2.5 py-1 rounded-md bg-sky-100 text-sky-800 font-semibold">Alma Compacta</span>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- TAB 2: CAPACITY CHARTS -->
+                <div id="tabCharts" class="p-6 hidden space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        
+                        <!-- LTB Flexure Chart -->
+                        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                            <h3 class="text-xs font-bold text-slate-700 uppercase mb-2 text-center">Curva de Pandeo Lateral-Torsional (Flexión <i>M</i><sub>n</sub> vs <i>L</i><sub>b</sub>)</h3>
+                            <div class="relative h-64">
+                                <canvas id="chartFlexure"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Compression Chart -->
+                        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                            <h3 class="text-xs font-bold text-slate-700 uppercase mb-2 text-center">Curva de Pandeo Axial (Compresión <i>P</i><sub>n</sub> vs <i>L</i>)</h3>
+                            <div class="relative h-64">
+                                <canvas id="chartCompression"></canvas>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- TAB 3: CALCULATION MEMORY (Formulas & Steps) -->
+                <div id="tabMemory" class="p-6 hidden space-y-6 text-sm">
+                    <div class="flex justify-between items-center border-b pb-3">
+                        <h2 class="text-base font-bold text-slate-900">Memoria de Cálculo Estructural Paso a Paso</h2>
+                        <span class="text-xs bg-slate-200 text-slate-700 px-2.5 py-1 rounded font-semibold">Norma ANSI/AISC 360-16 & NCh427/1</span>
+                    </div>
+
+                    <div id="memoryContent" class="space-y-6 text-slate-700">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- TAB 4: IPE CATALOG TABLE -->
+                <div id="tabCatalog" class="p-6 hidden space-y-4">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-sm font-bold text-slate-800">Catálogo Completo de Perfiles IPE (Valores Nominales ICHA / EURONORM)</h3>
+                    </div>
+                    <div class="overflow-x-auto max-h-[400px] border rounded-lg">
+                        <table class="w-full text-xs text-left text-slate-600">
+                            <thead class="text-xs text-slate-700 uppercase bg-slate-100 sticky top-0">
+                                <tr>
+                                    <th class="px-3 py-2">Perfil</th>
+                                    <th class="px-3 py-2">h (mm)</th>
+                                    <th class="px-3 py-2">b (mm)</th>
+                                    <th class="px-3 py-2">tw (mm)</th>
+                                    <th class="px-3 py-2">tf (mm)</th>
+                                    <th class="px-3 py-2">A (cm²)</th>
+                                    <th class="px-3 py-2">Peso (kg/m)</th>
+                                    <th class="px-3 py-2">Ix (cm⁴)</th>
+                                    <th class="px-3 py-2">Zx (cm³)</th>
+                                    <th class="px-3 py-2">Iy (cm⁴)</th>
+                                    <th class="px-3 py-2">ry (cm)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="catalogTableBody" class="divide-y divide-slate-200 bg-white">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+    <script>
+        const IPE_CATALOG = [
+            { name: 'IPE 80',  h: 80,  b: 46,  tw: 3.8, tf: 5.2, r: 5,  A: 7.64, weight: 6.0,  Ix: 80.1,  Sx: 20.0, Zx: 23.2, rx: 3.24, Iy: 8.49, Sy: 3.69, Zy: 5.82, ry: 1.05, J: 0.704, Cw: 119 },
+            { name: 'IPE 100', h: 100, b: 55,  tw: 4.1, tf: 5.7, r: 7,  A: 10.3, weight: 8.1,  Ix: 171.0, Sx: 34.2, Zx: 39.4, rx: 4.07, Iy: 15.9, Sy: 5.79, Zy: 9.15, ry: 1.24, J: 1.20,  Cw: 351 },
+            { name: 'IPE 120', h: 120, b: 64,  tw: 4.4, tf: 6.3, r: 7,  A: 13.2, weight: 10.4, Ix: 318.0, Sx: 53.0, Zx: 60.7, rx: 4.90, Iy: 27.7, Sy: 8.65, Zy: 13.6, ry: 1.45, J: 1.74,  Cw: 890 },
+            { name: 'IPE 140', h: 140, b: 73,  tw: 4.7, tf: 6.9, r: 7,  A: 16.4, weight: 12.9, Ix: 541.0, Sx: 77.3, Zx: 88.3, rx: 5.74, Iy: 44.9, Sy: 12.3, Zy: 19.2, ry: 1.65, J: 2.45,  Cw: 1980 },
+            { name: 'IPE 160', h: 160, b: 82,  tw: 5.0, tf: 7.4, r: 9,  A: 20.1, weight: 15.8, Ix: 869.0, Sx: 109.0,Zx: 124.0,rx: 6.58, Iy: 68.3, Sy: 16.7, Zy: 26.1, ry: 1.84, J: 3.60,  Cw: 3960 },
+            { name: 'IPE 180', h: 180, b: 91,  tw: 5.3, tf: 8.0, r: 9,  A: 23.9, weight: 18.8, Ix: 1317.0,Sx: 146.0,Zx: 166.0,rx: 7.42, Iy: 101.0,Sy: 22.2, Zy: 34.6, ry: 2.05, J: 4.79,  Cw: 7430 },
+            { name: 'IPE 200', h: 200, b: 100, tw: 5.6, tf: 8.5, r: 12, A: 28.5, weight: 22.4, Ix: 1943.0,Sx: 194.0,Zx: 221.0,rx: 8.26, Iy: 142.0,Sy: 28.5, Zy: 44.6, ry: 2.24, J: 6.98,  Cw: 13000 },
+            { name: 'IPE 220', h: 220, b: 110, tw: 5.9, tf: 9.2, r: 12, A: 33.4, weight: 26.2, Ix: 2772.0,Sx: 252.0,Zx: 285.0,rx: 9.11, Iy: 205.0,Sy: 37.3, Zy: 58.1, ry: 2.48, J: 9.07,  Cw: 22700 },
+            { name: 'IPE 240', h: 240, b: 120, tw: 6.2, tf: 9.8, r: 15, A: 39.1, weight: 30.7, Ix: 3892.0,Sx: 324.0,Zx: 367.0,rx: 9.97, Iy: 284.0,Sy: 47.3, Zy: 73.9, ry: 2.69, J: 12.9,  Cw: 37400 },
+            { name: 'IPE 270', h: 270, b: 135, tw: 6.6, tf: 10.2,r: 15, A: 45.9, weight: 36.1, Ix: 5790.0,Sx: 429.0,Zx: 484.0,rx: 11.2, Iy: 420.0,Sy: 62.2, Zy: 97.0, ry: 3.02, J: 15.9,  Cw: 70600 },
+            { name: 'IPE 300', h: 300, b: 150, tw: 7.1, tf: 10.7,r: 15, A: 53.8, weight: 42.2, Ix: 8356.0,Sx: 557.0,Zx: 628.0,rx: 12.5, Iy: 604.0,Sy: 80.5, Zy: 125.0,ry: 3.35, J: 20.1,  Cw: 126000 },
+            { name: 'IPE 330', h: 330, b: 160, tw: 7.5, tf: 11.5,r: 18, A: 62.6, weight: 49.1, Ix: 11770.0,Sx:713.0,Zx: 804.0,rx: 13.7, Iy: 788.0,Sy: 98.5, Zy: 154.0,ry: 3.55, J: 28.1,  Cw: 199000 },
+            { name: 'IPE 360', h: 360, b: 170, tw: 8.0, tf: 12.7,r: 18, A: 72.7, weight: 57.1, Ix: 16270.0,Sx:904.0,Zx: 1019.0,rx:15.0, Iy: 1043.0,Sy:123.0,Zy: 191.0,ry: 3.79, J: 37.3,  Cw: 314000 },
+            { name: 'IPE 400', h: 400, b: 180, tw: 8.6, tf: 13.5,r: 21, A: 84.5, weight: 66.3, Ix: 23130.0,Sx:1156.0,Zx:1307.0,rx:16.5, Iy: 1318.0,Sy:146.0,Zy: 229.0,ry: 3.95, J: 51.3,  Cw: 490000 },
+            { name: 'IPE 450', h: 450, b: 190, tw: 9.4, tf: 14.6,r: 21, A: 98.8, weight: 77.6, Ix: 33740.0,Sx:1500.0,Zx:1702.0,rx:18.5, Iy: 1676.0,Sy:176.0,Zy: 276.0,ry: 4.12, J: 66.8,  Cw: 791000 },
+            { name: 'IPE 500', h: 500, b: 200, tw: 10.2,tf: 16.0,r: 21, A: 116.0,weight: 90.7, Ix: 48200.0,Sx:1930.0,Zx:2194.0,rx:20.4, Iy: 2142.0,Sy:214.0,Zy: 336.0,ry: 4.30, J: 89.3,  Cw: 1249000 },
+            { name: 'IPE 550', h: 550, b: 210, tw: 11.1,tf: 17.2,r: 24, A: 134.0,weight: 106.0,Ix: 67120.0,Sx:2440.0,Zx:2787.0,rx:22.4, Iy: 2668.0,Sy:254.0,Zy: 401.0,ry: 4.45, J: 123.0, Cw: 1880000 },
+            { name: 'IPE 600', h: 600, b: 220, tw: 12.0,tf: 19.0,r: 24, A: 156.0,weight: 122.0,Ix: 92080.0,Sx:3070.0,Zx:3512.0,rx:24.3, Iy: 3387.0,Sy:308.0,Zy: 486.0,ry: 4.66, J: 165.0, Cw: 2830000 }
+        ];
+
+        // Global State Variables
+        let currentMethod = 'LRFD'; // 'LRFD' or 'ASD'
+        let chartFlexureInstance = null;
+        let chartCompressionInstance = null;
+
+        window.onload = function() {
+            populateProfileDropdown();
+            populateCatalogTable();
+            calculateAll();
+        };
+
+        function populateProfileDropdown() {
+            const select = document.getElementById('selectProfile');
+            select.innerHTML = '';
+            IPE_CATALOG.forEach((p, idx) => {
+                const opt = document.createElement('option');
+                opt.value = idx;
+                opt.textContent = `${p.name} (${p.weight} kg/m)`;
+                if (p.name === 'IPE 300') opt.selected = true;
+                select.appendChild(opt);
+            });
+        }
+
+        function populateCatalogTable() {
+            const tbody = document.getElementById('catalogTableBody');
+            tbody.innerHTML = '';
+            IPE_CATALOG.forEach(p => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50 border-b";
+                tr.innerHTML = `
+                    <td class="px-3 py-1.5 font-bold text-sky-700">${p.name}</td>
+                    <td class="px-3 py-1.5">${p.h}</td>
+                    <td class="px-3 py-1.5">${p.b}</td>
+                    <td class="px-3 py-1.5">${p.tw}</td>
+                    <td class="px-3 py-1.5">${p.tf}</td>
+                    <td class="px-3 py-1.5">${p.A}</td>
+                    <td class="px-3 py-1.5 font-medium text-slate-800">${p.weight}</td>
+                    <td class="px-3 py-1.5">${p.Ix.toLocaleString()}</td>
+                    <td class="px-3 py-1.5">${p.Zx.toLocaleString()}</td>
+                    <td class="px-3 py-1.5">${p.Iy.toLocaleString()}</td>
+                    <td class="px-3 py-1.5">${p.ry}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function setMethod(method) {
+            currentMethod = method;
+            const btnLRFD = document.getElementById('btnMethodLRFD');
+            const btnASD = document.getElementById('btnMethodASD');
+            
+            if (method === 'LRFD') {
+                btnLRFD.className = "px-3 py-1.5 rounded-md transition-all duration-150 bg-sky-600 text-white shadow";
+                btnASD.className = "px-3 py-1.5 rounded-md text-slate-400 hover:text-white transition-all duration-150";
+            } else {
+                btnASD.className = "px-3 py-1.5 rounded-md transition-all duration-150 bg-sky-600 text-white shadow";
+                btnLRFD.className = "px-3 py-1.5 rounded-md text-slate-400 hover:text-white transition-all duration-150";
+            }
+            calculateAll();
+        }
+
+        function handleSteelChange() {
+            const val = document.getElementById('selectSteel').value;
+            const customDiv = document.getElementById('customFyContainer');
+            if (val === 'CUSTOM') {
+                customDiv.classList.remove('hidden');
+            } else {
+                customDiv.classList.add('hidden');
+            }
+            calculateAll();
+        }
+
+        function handleCbPreset() {
+            const val = document.getElementById('selectCbPreset').value;
+            const manualInput = document.getElementById('inputCbManual');
+            const displaySpan = document.getElementById('cbValueDisplay');
+
+            if (val === 'CUSTOM') {
+                manualInput.classList.remove('hidden');
+                displaySpan.textContent = parseFloat(manualInput.value).toFixed(2);
+            } else {
+                manualInput.classList.add('hidden');
+                displaySpan.textContent = parseFloat(val).toFixed(2);
+            }
+            calculateAll();
+        }
+
+        function syncLengths() {
+            const L = parseFloat(document.getElementById('inputL').value) || 6.0;
+            const inputLb = document.getElementById('inputLb');
+            // Default Lb to L/2 if user modifies L
+            inputLb.value = (L / 2).toFixed(1);
+        }
+
+        function switchTab(tabId) {
+            ['tabOverview', 'tabCharts', 'tabMemory', 'tabCatalog'].forEach(t => {
+                document.getElementById(t).classList.add('hidden');
+                document.getElementById('btn' + t.charAt(0).toUpperCase() + t.slice(1)).classList.remove('active');
+            });
+            document.getElementById(tabId).classList.remove('hidden');
+            document.getElementById('btn' + tabId.charAt(0).toUpperCase() + tabId.slice(1)).classList.add('active');
+
+            if (tabId === 'tabCharts') {
+                renderCharts();
+            }
+        }
+
+        function calculateAll() {
+            // 1. Get Selected Profile Properties
+            const profileIdx = parseInt(document.getElementById('selectProfile').value) || 10;
+            const prof = IPE_CATALOG[profileIdx];
+
+            // 2. Get Material Properties
+            const steelVal = document.getElementById('selectSteel').value;
+            let Fy = 345; // MPa
+            let Fu = 450; // MPa
+            const E = 200000; // MPa
+            const G = 77200; // MPa
+
+            if (steelVal === 'A36') { Fy = 250; Fu = 400; }
+            else if (steelVal === 'A572_50') { Fy = 345; Fu = 450; }
+            else if (steelVal === 'S235') { Fy = 235; Fu = 360; }
+            else if (steelVal === 'S275') { Fy = 275; Fu = 430; }
+            else if (steelVal === 'CUSTOM') {
+                Fy = parseFloat(document.getElementById('inputCustomFy').value) || 345;
+                Fu = parseFloat(document.getElementById('inputCustomFu').value) || 450;
+            }
+
+            // 3. Inputs
+            const L = (parseFloat(document.getElementById('inputL').value) || 6.0) * 1000; // mm
+            const Lb = (parseFloat(document.getElementById('inputLb').value) || 3.0) * 1000; // mm
+            
+            let Cb = 1.0;
+            const cbPreset = document.getElementById('selectCbPreset').value;
+            if (cbPreset === 'CUSTOM') {
+                Cb = parseFloat(document.getElementById('inputCbManual').value) || 1.0;
+            } else {
+                Cb = parseFloat(cbPreset);
+            }
+            document.getElementById('cbValueDisplay').textContent = Cb.toFixed(2);
+
+            const Kx = parseFloat(document.getElementById('inputKx').value) || 1.0;
+            const Ky = parseFloat(document.getElementById('inputKy').value) || 1.0;
+
+            const Mu = parseFloat(document.getElementById('inputMu').value) || 0.0; // kN*m
+            const Vu = parseFloat(document.getElementById('inputVu').value) || 0.0; // kN
+            const Pu = parseFloat(document.getElementById('inputPu').value) || 0.0; // kN
+            const qs = parseFloat(document.getElementById('inputQs').value) || 0.0; // kN/m
+            const deflLimitDiv = parseFloat(document.getElementById('selectDeflLimit').value) || 360;
+
+            // Unit Conversions & Prep
+            const Ag = prof.A * 100; // mm2
+            const Ix = prof.Ix * 1e4; // mm4
+            const Sx = prof.Sx * 1e3; // mm3
+            const Zx = prof.Zx * 1e3; // mm3
+            const rx = prof.rx * 10; // mm
+            const Iy = prof.Iy * 1e4; // mm4
+            const Sy = prof.Sy * 1e3; // mm3
+            const ry = prof.ry * 10; // mm
+            const J = prof.J * 1e4; // mm4
+            const Cw = prof.Cw * 1e6; // mm6
+            const h0 = prof.h - prof.tf; // mm
+
+            /* --- 4. FLEXURE DESIGN (AISC Chapter F) --- */
+            // Check Flange Slenderness (F2 / F3)
+            const lambda_f = prof.b / (2 * prof.tf);
+            const lambda_pf = 0.38 * Math.sqrt(E / Fy);
+            const lambda_rf = 1.0 * Math.sqrt(E / Fy);
+            const isFlangeCompact = lambda_f <= lambda_pf;
+
+            // Check Web Slenderness (F2)
+            const h_web = prof.h - 2 * prof.tf;
+            const lambda_w = h_web / prof.tw;
+            const lambda_pw = 3.76 * Math.sqrt(E / Fy);
+            const isWebCompact = lambda_w <= lambda_pw;
+
+            // Plastic Moment Mp
+            const Mp = (Fy * Zx) / 1e6; // kN*m
+
+            // LTB Limiting Lengths Lp & Lr
+            const Lp = 1.76 * ry * Math.sqrt(E / Fy); // mm
+            
+            // rts calculation
+            const rts = Math.sqrt(Math.sqrt(Iy * Cw) / Sx); // mm
+            const c = 1.0;
+            const Lr_term1 = (1.95 * rts * E) / (0.7 * Fy);
+            const Lr_term2 = (J * c) / (Sx * h0);
+            const Lr = Lr_term1 * Math.sqrt(Lr_term2 + Math.sqrt(Math.pow(Lr_term2, 2) + 6.76 * Math.pow((0.7 * Fy) / E, 2))); // mm
+
+            // Nominal Flexural Strength Mn
+            let Mn = Mp; // kN*m
+            let ltbState = "Fluencia Plástica ($L_b \\le L_p$)";
+
+            if (Lb <= Lp) {
+                Mn = Mp;
+            } else if (Lb <= Lr) {
+                ltbState = "Pandeo Inelástico ($L_p < L_b \\le L_r$)";
+                Mn = Cb * (Mp - (Mp - 0.7 * Fy * Sx / 1e6) * ((Lb - Lp) / (Lr - Lp)));
+                if (Mn > Mp) Mn = Mp;
+            } else {
+                ltbState = "Pandeo Elástico ($L_b > L_r$)";
+                const Fcr_ltb = (Cb * Math.pow(Math.PI, 2) * E) / Math.pow(Lb / rts, 2) * Math.sqrt(1 + 0.078 * (J * c / (Sx * h0)) * Math.pow(Lb / rts, 2));
+                Mn = (Fcr_ltb * Sx) / 1e6;
+                if (Mn > Mp) Mn = Mp;
+            }
+
+            const phi_b = 0.90;
+            const Omega_b = 1.67;
+            const flexureCap = currentMethod === 'LRFD' ? phi_b * Mn : Mn / Omega_b; // kN*m
+            const flexureRatio = (Mu / flexureCap) * 100;
+
+            /* --- 5. SHEAR DESIGN (AISC Chapter G) --- */
+            const Aw = prof.h * prof.tw; // mm2
+            const kv = 1.2; // Rolled I-shapes
+            const lambda_v = (prof.h - 2 * prof.tf) / prof.tw;
+            const limit_v1 = 2.24 * Math.sqrt(E / Fy);
+
+            let Cv1 = 1.0;
+            let phi_v = 1.00;
+            let Omega_v = 1.50;
+
+            if (lambda_v <= limit_v1) {
+                Cv1 = 1.0;
+                phi_v = 1.00;
+                Omega_v = 1.50;
+            } else {
+                phi_v = 0.90;
+                Omega_v = 1.67;
+                const limit_v2 = 1.10 * Math.sqrt((kv * E) / Fy);
+                if (lambda_v <= limit_v2) {
+                    Cv1 = 1.0;
+                } else {
+                    Cv1 = limit_v2 / lambda_v;
+                }
+            }
+
+            const Vn = (0.60 * Fy * Aw * Cv1) / 1000; // kN
+            const shearCap = currentMethod === 'LRFD' ? phi_v * Vn : Vn / Omega_v; // kN
+            const shearRatio = (Vu / shearCap) * 100;
+
+            /* --- 6. DEFLECTION CHECK (Serviceability) --- */
+            // Simply supported beam with uniform load qs (N/mm)
+            const qs_Nmm = qs; // kN/m == N/mm
+            const delta_calc = (5 * qs_Nmm * Math.pow(L, 4)) / (384 * E * Ix); // mm
+            const delta_adm = L / deflLimitDiv; // mm
+            const deflRatio = (delta_calc / delta_adm) * 100;
+
+            /* --- 7. AXIAL COMPRESSION DESIGN (AISC Chapter E) --- */
+            const KLx_rx = (Kx * L) / rx;
+            const KLy_ry = (Ky * L) / ry;
+            const KL_r_max = Math.max(KLx_rx, KLy_ry);
+
+            const Fe = (Math.pow(Math.PI, 2) * E) / Math.pow(KL_r_max, 2); // MPa
+            const slendernessLimit = 4.71 * Math.sqrt(E / Fy);
+
+            let Fcr = 0.0;
+            let buckType = "";
+            if (KL_r_max <= slendernessLimit) {
+                Fcr = Math.pow(0.658, (Fy / Fe)) * Fy;
+                buckType = "Pandeo Inelástico ($KL/r \\le 4.71\\sqrt{E/F_y}$)";
+            } else {
+                Fcr = 0.877 * Fe;
+                buckType = "Pandeo Elástico ($KL/r > 4.71\\sqrt{E/F_y}$)";
+            }
+
+            // Non-slender element reduction Q = 1.0 for standard IPE
+            const Pn = (Fcr * Ag) / 1000; // kN
+            const phi_c = 0.90;
+            const Omega_c = 1.67;
+            const compCap = currentMethod === 'LRFD' ? phi_c * Pn : Pn / Omega_c; // kN
+            const compRatio = (Pu / compCap) * 100;
+
+            // 8. Update Overview UI Cards
+            updateSummaryCards({
+                flexureCap, Mu, flexureRatio,
+                shearCap, Vu, shearRatio,
+                delta_calc, delta_adm, deflRatio,
+                compCap, Pu, compRatio
+            });
+
+            // 9. Update Overview Profile Details & Drawing
+            updateOverviewTab({
+                prof, Fy, Fu,
+                isFlangeCompact, isWebCompact,
+                L, Lb
+            });
+
+            // 10. Update Memory Tab
+            updateMemoryTab({
+                prof, Fy, Fu, E, G, L, Lb, Cb, Kx, Ky,
+                Mu, Vu, Pu, qs, deflLimitDiv,
+                Ag, Ix, Sx, Zx, rx, Iy, Sy, ry, J, Cw, h0,
+                Mp, Lp, Lr, rts, Mn, flexureCap, flexureRatio, ltbState,
+                Vn, shearCap, shearRatio, Cv1, phi_v, Omega_v,
+                delta_calc, delta_adm, deflRatio,
+                KLx_rx, KLy_ry, KL_r_max, Fe, Fcr, Pn, compCap, compRatio, buckType
+            });
+
+            // Render SVG
+            renderProfileSVG(prof);
+        }
+
+        function updateSummaryCards(d) {
+            // Flexure
+            document.getElementById('valFlexureCap').textContent = `${d.flexureCap.toFixed(1)} kN·m`;
+            document.getElementById('valFlexureDemand').textContent = `Solicitado: ${d.Mu.toFixed(1)} kN·m`;
+            document.getElementById('ratioFlexureVal').textContent = `${d.flexureRatio.toFixed(1)}%`;
+            updateCardStatus('cardFlexure', 'badgeFlexure', 'barFlexure', d.flexureRatio);
+
+            // Shear
+            document.getElementById('valShearCap').textContent = `${d.shearCap.toFixed(1)} kN`;
+            document.getElementById('valShearDemand').textContent = `Solicitado: ${d.Vu.toFixed(1)} kN`;
+            document.getElementById('ratioShearVal').textContent = `${d.shearRatio.toFixed(1)}%`;
+            updateCardStatus('cardShear', 'badgeShear', 'barShear', d.shearRatio);
+
+            // Deflection
+            document.getElementById('valDeflectionCalc').textContent = `${d.delta_calc.toFixed(1)} mm`;
+            document.getElementById('valDeflectionAdm').textContent = `Máx: ${d.delta_adm.toFixed(1)} mm`;
+            document.getElementById('ratioDeflectionVal').textContent = `${d.deflRatio.toFixed(1)}%`;
+            updateCardStatus('cardDeflection', 'badgeDeflection', 'barDeflection', d.deflRatio);
+
+            // Compression
+            document.getElementById('valCompressionCap').textContent = `${d.compCap.toFixed(1)} kN`;
+            document.getElementById('valCompressionDemand').textContent = `Solicitado: ${d.Pu.toFixed(1)} kN`;
+            document.getElementById('ratioCompressionVal').textContent = `${d.compRatio.toFixed(1)}%`;
+            updateCardStatus('cardCompression', 'badgeCompression', 'barCompression', d.compRatio);
+        }
+
+        function updateCardStatus(cardId, badgeId, barId, ratio) {
+            const badge = document.getElementById(badgeId);
+            const bar = document.getElementById(barId);
+            const clampedRatio = Math.min(Math.max(ratio, 0), 100);
+
+            bar.style.width = `${clampedRatio}%`;
+
+            if (ratio <= 90) {
+                badge.className = "text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800";
+                badge.textContent = "CUMPLE";
+                bar.className = "bg-emerald-500 h-2 rounded-full transition-all duration-300";
+            } else if (ratio <= 100) {
+                badge.className = "text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800";
+                badge.textContent = "AL LÍMITE";
+                bar.className = "bg-amber-500 h-2 rounded-full transition-all duration-300";
+            } else {
+                badge.className = "text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-100 text-rose-800";
+                badge.textContent = "FALLA";
+                bar.className = "bg-rose-500 h-2 rounded-full transition-all duration-300";
+            }
+        }
+
+        function updateOverviewTab(d) {
+            document.getElementById('drawProfileTitle').textContent = d.prof.name;
+            document.getElementById('propH').textContent = `${d.prof.h} mm`;
+            document.getElementById('propB').textContent = `${d.prof.b} mm`;
+            document.getElementById('propTw').textContent = `${d.prof.tw} mm`;
+            document.getElementById('propTf').textContent = `${d.prof.tf} mm`;
+            document.getElementById('propA').textContent = `${d.prof.A} cm²`;
+            document.getElementById('propWeight').textContent = `${d.prof.weight} kg/m`;
+            document.getElementById('propIx').textContent = `${d.prof.Ix.toLocaleString()} cm⁴`;
+            document.getElementById('propZx').textContent = `${d.prof.Zx.toLocaleString()} cm³`;
+            document.getElementById('propRx').textContent = `${d.prof.rx} cm`;
+            document.getElementById('propRy').textContent = `${d.prof.ry} cm`;
+
+            const bFlange = document.getElementById('badgeFlangeCompact');
+            bFlange.textContent = d.isFlangeCompact ? "Ala Compacta" : "Ala No Compacta";
+            bFlange.className = d.isFlangeCompact ? "text-xs px-2.5 py-1 rounded-md bg-sky-100 text-sky-800 font-semibold" : "text-xs px-2.5 py-1 rounded-md bg-amber-100 text-amber-800 font-semibold";
+
+            const bWeb = document.getElementById('badgeWebCompact');
+            bWeb.textContent = d.isWebCompact ? "Alma Compacta" : "Alma No Compacta";
+            bWeb.className = d.isWebCompact ? "text-xs px-2.5 py-1 rounded-md bg-sky-100 text-sky-800 font-semibold" : "text-xs px-2.5 py-1 rounded-md bg-amber-100 text-amber-800 font-semibold";
+        }
+
+        function renderProfileSVG(p) {
+            const container = document.getElementById('svgContainer');
+            const maxH = 220;
+            const scale = maxH / p.h;
+            
+            const w = p.b * scale;
+            const h = p.h * scale;
+            const tw = Math.max(p.tw * scale, 3);
+            const tf = Math.max(p.tf * scale, 4);
+
+            const cx = 150;
+            const cy = 130;
+
+            const topFlangeY = cy - h/2;
+            const botFlangeY = cy + h/2 - tf;
+
+            const svg = `
+                <svg width="300" height="260" viewBox="0 0 300 260" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="steelGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#0284c7"/>
+                            <stop offset="100%" stop-color="#0369a1"/>
+                        </linearGradient>
+                    </defs>
+
+                    <!-- Top Flange -->
+                    <rect x="${cx - w/2}" y="${topFlangeY}" width="${w}" height="${tf}" rx="2" fill="url(#steelGrad)" stroke="#0c4a6e" stroke-width="1.5"/>
+                    <!-- Web -->
+                    <rect x="${cx - tw/2}" y="${topFlangeY + tf}" width="${tw}" height="${h - 2*tf}" fill="url(#steelGrad)" stroke="#0c4a6e" stroke-width="1.5"/>
+                    <!-- Bottom Flange -->
+                    <rect x="${cx - w/2}" y="${botFlangeY}" width="${w}" height="${tf}" rx="2" fill="url(#steelGrad)" stroke="#0c4a6e" stroke-width="1.5"/>
+
+                    <!-- Dimension Line H -->
+                    <line x1="${cx - w/2 - 25}" y1="${cy - h/2}" x2="${cx - w/2 - 25}" y2="${cy + h/2}" stroke="#64748b" stroke-width="1.5" stroke-dasharray="3,3"/>
+                    <line x1="${cx - w/2 - 30}" y1="${cy - h/2}" x2="${cx - w/2 - 20}" y2="${cy - h/2}" stroke="#64748b" stroke-width="1.5"/>
+                    <line x1="${cx - w/2 - 30}" y1="${cy + h/2}" x2="${cx - w/2 - 20}" y2="${cy + h/2}" stroke="#64748b" stroke-width="1.5"/>
+                    <text x="${cx - w/2 - 32}" y="${cy}" font-size="11" font-weight="bold" fill="#334155" text-anchor="end" dominant-baseline="middle">h = ${p.h} mm</text>
+
+                    <!-- Dimension Line B -->
+                    <line x1="${cx - w/2}" y1="${topFlangeY - 15}" x2="${cx + w/2}" y2="${topFlangeY - 15}" stroke="#64748b" stroke-width="1.5" stroke-dasharray="3,3"/>
+                    <line x1="${cx - w/2}" y1="${topFlangeY - 20}" x2="${cx - w/2}" y2="${topFlangeY - 10}" stroke="#64748b" stroke-width="1.5"/>
+                    <line x1="${cx + w/2}" y1="${topFlangeY - 20}" x2="${cx + w/2}" y2="${topFlangeY - 10}" stroke="#64748b" stroke-width="1.5"/>
+                    <text x="${cx}" y="${topFlangeY - 22}" font-size="11" font-weight="bold" fill="#334155" text-anchor="middle">b = ${p.b} mm</text>
+
+                    <!-- Labels tf and tw -->
+                    <text x="${cx + w/2 + 10}" y="${topFlangeY + tf/2}" font-size="10" fill="#475569" dominant-baseline="middle">tf = ${p.tf} mm</text>
+                    <text x="${cx + tw/2 + 10}" y="${cy}" font-size="10" fill="#475569" dominant-baseline="middle">tw = ${p.tw} mm</text>
+                </svg>
+            `;
+            container.innerHTML = svg;
+        }
+
+        function updateMemoryTab(m) {
+            const container = document.getElementById('memoryContent');
+            const methodTag = currentMethod === 'LRFD' ? '\\phi = 0.90' : '\\Omega = 1.67';
+
+            container.innerHTML = `
+                <!-- Section 1: Inputs -->
+                <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
+                    <h3 class="font-bold text-slate-800 text-sm mb-2 border-b pb-1">1. Datos de Entrada y Propiedades del Perfil</h3>
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-2 text-xs">
+                        <div><b>Perfil:</b> ${m.prof.name}</div>
+                        <div><b>Tensión de Fluencia ($F_y$):</b> ${m.Fy} MPa</div>
+                        <div><b>Tensión Última ($F_u$):</b> ${m.Fu} MPa</div>
+                        <div><b>Módulo Elástico ($E$):</b> 200,000 MPa</div>
+                        <div><b>Área Sección ($A_g$):</b> ${m.prof.A} cm² (${m.Ag.toFixed(0)} mm²)</div>
+                        <div><b>Inercia Principal ($I_x$):</b> ${m.prof.Ix} cm⁴</div>
+                        <div><b>Módulo Plástico ($Z_x$):</b> ${m.prof.Zx} cm³</div>
+                        <div><b>Radio Giro Eje Fuerte ($r_x$):</b> ${m.prof.rx} cm</div>
+                        <div><b>Radio Giro Eje Débil ($r_y$):</b> ${m.prof.ry} cm</div>
+                        <div><b>Luz Total ($L$):</b> ${(m.L/1000).toFixed(2)} m</div>
+                        <div><b>Luz no Arriostrada ($L_b$):</b> ${(m.Lb/1000).toFixed(2)} m</div>
+                        <div><b>Factor Gradiente ($C_b$):</b> ${m.Cb.toFixed(2)}</div>
+                    </div>
+                </div>
+
+                <!-- Section 2: Flexure -->
+                <div class="bg-slate-50 p-4 rounded-lg border border-slate-200 space-y-2">
+                    <h3 class="font-bold text-slate-800 text-sm border-b pb-1">2. Diseño a Flexión Eje Fuerte (AISC 360-16 Cap. F)</h3>
+                    <p class="text-xs">Momento plástico de la sección:</p>
+                    <div class="math-eq">$$M_p = F_y \\cdot Z_x = ${m.Fy} \\text{ MPa} \\cdot ${(m.Zx/1000).toFixed(0)} \\text{ cm}^3 = ${m.Mp.toFixed(2)} \\text{ kN}\\cdot\\text{m}$$</div>
+                    
+                    <p class="text-xs mt-2">Longitudes límites para Pandeo Lateral-Torsional (LTB):</p>
+                    <div class="math-eq">$$L_p = 1.76 \\cdot r_y \\cdot \\sqrt{\\frac{E}{F_y}} = 1.76 \\cdot ${(m.ry*10).toFixed(1)} \\cdot \\sqrt{\\frac{200000}{${m.Fy}}} = ${(m.Lp/1000).toFixed(3)} \\text{ m}$$</div>
+                    <div class="math-eq">$$L_r = ${(m.Lr/1000).toFixed(3)} \\text{ m}$$</div>
+                    
+                    <p class="text-xs font-semibold text-sky-700">Estado límite gobernante: ${m.ltbState}</p>
+                    <div class="math-eq">$$M_n = ${m.Mn.toFixed(2)} \\text{ kN}\\cdot\\text{m}$$</div>
+                    <div class="math-eq">$$${currentMethod === 'LRFD' ? '\\phi_b M_n = 0.90 \\cdot ' + m.Mn.toFixed(2) + ' = ' + m.flexureCap.toFixed(2) : '\\frac{M_n}{\\Omega_b} = \\frac{' + m.Mn.toFixed(2) + '}{1.67} = ' + m.flexureCap.toFixed(2)} \\text{ kN}\\cdot\\text{m}$$</div>
+                    <p class="text-xs">Ratio Demanda / Capacidad a Flexión: <b>${m.flexureRatio.toFixed(1)}%</b></p>
+                </div>
+
+                <!-- Section 3: Shear -->
+                <div class="bg-slate-50 p-4 rounded-lg border border-slate-200 space-y-2">
+                    <h3 class="font-bold text-slate-800 text-sm border-b pb-1">3. Diseño a Corte en Alma (AISC 360-16 Cap. G)</h3>
+                    <div class="math-eq">$$A_w = d \\cdot t_w = ${m.prof.h} \\cdot ${m.prof.tw} = ${(m.prof.h * m.prof.tw).toFixed(0)} \\text{ mm}^2$$</div>
+                    <div class="math-eq">$$V_n = 0.60 \\cdot F_y \\cdot A_w \\cdot C_{v1} = 0.60 \\cdot ${m.Fy} \\cdot ${(m.prof.h * m.prof.tw).toFixed(0)} \\cdot ${m.Cv1.toFixed(2)} = ${m.Vn.toFixed(2)} \\text{ kN}$$</div>
+                    <div class="math-eq">$$${currentMethod === 'LRFD' ? '\\phi_v V_n = ' + m.phi_v.toFixed(2) + ' \\cdot ' + m.Vn.toFixed(2) + ' = ' + m.shearCap.toFixed(2) : '\\frac{V_n}{\\Omega_v} = \\frac{' + m.Vn.toFixed(2) + '}{' + m.Omega_v.toFixed(2) + '} = ' + m.shearCap.toFixed(2)} \\text{ kN}$$</div>
+                    <p class="text-xs">Ratio Demanda / Capacidad a Corte: <b>${m.shearRatio.toFixed(1)}%</b></p>
+                </div>
+
+                <!-- Section 4: Deflection -->
+                <div class="bg-slate-50 p-4 rounded-lg border border-slate-200 space-y-2">
+                    <h3 class="font-bold text-slate-800 text-sm border-b pb-1">4. Verificación de Deflexión (Estado Límite de Servicio)</h3>
+                    <div class="math-eq">$$\\delta_{calc} = \\frac{5 \\cdot q_s \\cdot L^4}{384 \\cdot E \\cdot I_x} = \\frac{5 \\cdot ${m.qs} \\cdot (${m.L})^4}{384 \\cdot 200000 \\cdot ${(m.Ix).toFixed(0)}} = ${m.delta_calc.toFixed(2)} \\text{ mm}$$</div>
+                    <div class="math-eq">$$\\delta_{adm} = \\frac{L}{${m.deflLimitDiv}} = \\frac{${m.L}}{${m.deflLimitDiv}} = ${m.delta_adm.toFixed(2)} \\text{ mm}$$</div>
+                    <p class="text-xs">Porcentaje de deformación utilizada: <b>${m.deflRatio.toFixed(1)}%</b></p>
+                </div>
+
+                <!-- Section 5: Axial Compression -->
+                <div class="bg-slate-50 p-4 rounded-lg border border-slate-200 space-y-2">
+                    <h3 class="font-bold text-slate-800 text-sm border-b pb-1">5. Capacidad a Compresión Axial (AISC 360-16 Cap. E)</h3>
+                    <p class="text-xs">Esbelteces de pandeo por flexión:</p>
+                    <div class="math-eq">$$\\left(\\frac{K_x L}{r_x}\\right) = \\frac{${m.Kx} \\cdot ${m.L}}{${(m.rx).toFixed(1)}} = ${m.KLx_rx.toFixed(1)}, \\quad \\left(\\frac{K_y L}{r_y}\\right) = \\frac{${m.Ky} \\cdot ${m.L}}{${(m.ry).toFixed(1)}} = ${m.KLy_ry.toFixed(1)}$$</div>
+                    <div class="math-eq">$$\\left(\\frac{KL}{r}\\right)_{máx} = ${m.KL_r_max.toFixed(1)}$$</div>
+                    <div class="math-eq">$$F_e = \\frac{\\pi^2 \\cdot E}{(KL/r)^2} = \\frac{\\pi^2 \\cdot 200000}{(${m.KL_r_max.toFixed(1)})^2} = ${m.Fe.toFixed(2)} \\text{ MPa}$$</div>
+                    <p class="text-xs font-semibold text-sky-700">Régimen de Pandeo: ${m.buckType}</p>
+                    <div class="math-eq">$$F_{cr} = ${m.Fcr.toFixed(2)} \\text{ MPa}$$</div>
+                    <div class="math-eq">$$P_n = F_{cr} \\cdot A_g = ${m.Fcr.toFixed(2)} \\text{ MPa} \\cdot ${(m.Ag).toFixed(0)} \\text{ mm}^2 = ${m.Pn.toFixed(2)} \\text{ kN}$$</div>
+                    <div class="math-eq">$$${currentMethod === 'LRFD' ? '\\phi_c P_n = 0.90 \\cdot ' + m.Pn.toFixed(2) + ' = ' + m.compCap.toFixed(2) : '\\frac{P_n}{\\Omega_c} = \\frac{' + m.Pn.toFixed(2) + '}{1.67} = ' + m.compCap.toFixed(2)} \\text{ kN}$$</div>
+                    <p class="text-xs">Ratio Demanda / Capacidad a Compresión: <b>${m.compRatio.toFixed(1)}%</b></p>
+                </div>
+            `;
+
+            // Trigger KaTeX render for step-by-step memory
+            if (typeof renderMathInElement === 'function') {
+                renderMathInElement(container, {
+                    delimiters: [
+                        {left: '$$', right: '$$', display: true},
+                        {left: '$', right: '$', display: false}
+                    ],
+                    throwOnError : false
+                });
+            }
+        }
+
+        function renderCharts() {
+            const profileIdx = parseInt(document.getElementById('selectProfile').value) || 10;
+            const prof = IPE_CATALOG[profileIdx];
+            
+            const steelVal = document.getElementById('selectSteel').value;
+            let Fy = 345;
+            if (steelVal === 'A36') Fy = 250;
+            else if (steelVal === 'S235') Fy = 235;
+            else if (steelVal === 'S275') Fy = 275;
+            else if (steelVal === 'CUSTOM') Fy = parseFloat(document.getElementById('inputCustomFy').value) || 345;
+
+            const E = 200000;
+            const Sx = prof.Sx * 1e3;
+            const Zx = prof.Zx * 1e3;
+            const ry = prof.ry * 10;
+            const rx = prof.rx * 10;
+            const J = prof.J * 1e4;
+            const Cw = prof.Cw * 1e6;
+            const h0 = prof.h - prof.tf;
+            const Ag = prof.A * 100;
+
+            const Mp = (Fy * Zx) / 1e6;
+            const Lp = 1.76 * ry * Math.sqrt(E / Fy);
+            const rts = Math.sqrt(Math.sqrt(prof.Iy * 1e4 * Cw) / Sx);
+            const Lr_term1 = (1.95 * rts * E) / (0.7 * Fy);
+            const Lr_term2 = (J * 1.0) / (Sx * h0);
+            const Lr = Lr_term1 * Math.sqrt(Lr_term2 + Math.sqrt(Math.pow(Lr_term2, 2) + 6.76 * Math.pow((0.7 * Fy) / E, 2)));
+
+            // Generate LTB Curve Data
+            const ltbData = [];
+            const compData = [];
+            const labelsL = [];
+
+            const currentLb = (parseFloat(document.getElementById('inputLb').value) || 3.0) * 1000;
+            const currentL = (parseFloat(document.getElementById('inputL').value) || 6.0) * 1000;
+
+            for (let l_m = 0.5; l_m <= 12.0; l_m += 0.5) {
+                const l_mm = l_m * 1000;
+                labelsL.push(`${l_m}m`);
+
+                // LTB
+                let mn = Mp;
+                if (l_mm <= Lp) {
+                    mn = Mp;
+                } else if (l_mm <= Lr) {
+                    mn = Mp - (Mp - 0.7 * Fy * Sx / 1e6) * ((l_mm - Lp) / (Lr - Lp));
+                } else {
+                    const Fcr_ltb = (1.0 * Math.pow(Math.PI, 2) * E) / Math.pow(l_mm / rts, 2) * Math.sqrt(1 + 0.078 * (J / (Sx * h0)) * Math.pow(l_mm / rts, 2));
+                    mn = (Fcr_ltb * Sx) / 1e6;
+                }
+                if (mn > Mp) mn = Mp;
+                ltbData.push(currentMethod === 'LRFD' ? 0.90 * mn : mn / 1.67);
+
+                // Compression
+                const kl_r = l_mm / ry;
+                const Fe = (Math.pow(Math.PI, 2) * E) / Math.pow(kl_r, 2);
+                let Fcr = 0;
+                if (kl_r <= 4.71 * Math.sqrt(E / Fy)) {
+                    Fcr = Math.pow(0.658, (Fy / Fe)) * Fy;
+                } else {
+                    Fcr = 0.877 * Fe;
+                }
+                const pn = (Fcr * Ag) / 1000;
+                compData.push(currentMethod === 'LRFD' ? 0.90 * pn : pn / 1.67);
+            }
+
+            // Render Chart Flexure
+            const ctxF = document.getElementById('chartFlexure').getContext('2d');
+            if (chartFlexureInstance) chartFlexureInstance.destroy();
+            chartFlexureInstance = new Chart(ctxF, {
+                type: 'line',
+                data: {
+                    labels: labelsL,
+                    datasets: [{
+                        label: `Capacidad Flexión (${currentMethod}) [kN·m]`,
+                        data: ltbData,
+                        borderColor: '#0284c7',
+                        backgroundColor: 'rgba(2, 132, 199, 0.1)',
+                        fill: true,
+                        tension: 0.2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: true, labels: { font: { size: 10 } } } },
+                    scales: {
+                        y: { title: { display: true, text: 'kN·m', font: { size: 10 } } },
+                        x: { title: { display: true, text: 'Longitud Lb (m)', font: { size: 10 } } }
+                    }
+                }
+            });
+
+            // Render Chart Compression
+            const ctxC = document.getElementById('chartCompression').getContext('2d');
+            if (chartCompressionInstance) chartCompressionInstance.destroy();
+            chartCompressionInstance = new Chart(ctxC, {
+                type: 'line',
+                data: {
+                    labels: labelsL,
+                    datasets: [{
+                        label: `Capacidad Compresión (${currentMethod}) [kN]`,
+                        data: compData,
+                        borderColor: '#059669',
+                        backgroundColor: 'rgba(5, 150, 105, 0.1)',
+                        fill: true,
+                        tension: 0.2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: true, labels: { font: { size: 10 } } } },
+                    scales: {
+                        y: { title: { display: true, text: 'kN', font: { size: 10 } } },
+                        x: { title: { display: true, text: 'Longitud K*L (m)', font: { size: 10 } } }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
