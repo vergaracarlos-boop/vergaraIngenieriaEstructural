@@ -1,0 +1,1394 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full bg-slate-900 text-slate-100">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Análisis Estructural de Vigas - Teorema de Castigliano</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- KaTeX for LaTeX Math Rendering -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+
+  <style>
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0f172a;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #475569;
+    }
+    .tab-btn.active {
+      border-bottom-color: #3b82f6;
+      color: #60a5fa;
+      background-color: rgba(30, 58, 138, 0.2);
+    }
+  </style>
+</head>
+<body class="h-full flex flex-col font-sans antialiased bg-slate-900 text-slate-100 selection:bg-blue-600 selection:text-white">
+
+  <!-- Header -->
+  <header class="bg-slate-800 border-b border-slate-700 sticky top-0 z-50 shadow-md">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <div class="p-2 bg-blue-600 rounded-lg text-white shadow-lg shadow-blue-500/30">
+          <i class="fa-solid fa-chart-area text-xl"></i>
+        </div>
+        <div>
+          <h1 class="text-lg font-bold text-white tracking-tight leading-none">Experto en Análisis Estructural</h1>
+          <p class="text-xs text-slate-400 mt-1">Método Energético de Castigliano & Catálogo IPE</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <button onclick="toggleEquationsModal()" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-md text-xs font-semibold flex items-center gap-2 transition shadow-sm">
+          <i class="fa-solid fa-square-root-variable"></i>
+          <span>Ecuaciones Analíticas</span>
+        </button>
+        <button id="btnLoadPreset" onclick="loadTestPreset()" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-md text-xs font-semibold flex items-center gap-2 transition shadow-sm">
+          <i class="fa-solid fa-rotate-right"></i>
+          <span>Caso Prueba ($L=9.0\text{m}$)</span>
+        </button>
+        <button onclick="toggleTheoryModal()" class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-md text-xs font-medium flex items-center gap-2 transition">
+          <i class="fa-solid fa-book-open"></i>
+          <span>Memoria de Castigliano</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Layout -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+    <!-- LEFT COLUMN: Control Panel & Inputs (5 Cols) -->
+    <div class="lg:col-span-5 flex flex-col gap-5">
+      
+      <!-- Geometría y Material -->
+      <div class="bg-slate-800/80 backdrop-blur rounded-xl border border-slate-700 p-4 shadow-lg">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-700 mb-4">
+          <h2 class="text-sm font-semibold text-blue-400 uppercase tracking-wider flex items-center gap-2">
+            <i class="fa-solid fa-ruler-combined"></i> Geometría y Sección
+          </h2>
+          <span class="text-xs px-2 py-0.5 rounded bg-blue-950 text-blue-300 border border-blue-800">Acero $E = 210\text{ GPa}$</span>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3 text-xs mb-4">
+          <div>
+            <label class="block text-slate-400 mb-1">Longitud de Viga $L$ (m)</label>
+            <input type="number" id="beamLength" value="9.0" step="0.5" min="1" max="50" onchange="updateBeamData()" class="w-full bg-slate-900 border border-slate-700 rounded-md px-3 py-1.5 text-white focus:outline-none focus:border-blue-500 font-mono">
+          </div>
+          <div>
+            <label class="block text-slate-400 mb-1">Módulo Elástico $E$ (GPa)</label>
+            <input type="number" id="youngModulus" value="210" step="5" min="10" max="500" onchange="updateBeamData()" class="w-full bg-slate-900 border border-slate-700 rounded-md px-3 py-1.5 text-white focus:outline-none focus:border-blue-500 font-mono">
+          </div>
+        </div>
+
+        <!-- Perfil IPE Selector -->
+        <div>
+          <label class="block text-slate-300 text-xs font-medium mb-1">Selección de Perfil IPE (Norma Europea)</label>
+          <select id="ipeSelect" onchange="onIpeChange()" class="w-full bg-slate-900 border border-slate-700 rounded-md px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500 font-medium">
+            <!-- Populated via JS -->
+          </select>
+        </div>
+
+        <!-- Propiedades del Perfil Seleccionado -->
+        <div id="ipeSpecsCard" class="mt-3 p-3 bg-slate-900/90 rounded-lg border border-slate-700/80 text-xs grid grid-cols-2 sm:grid-cols-3 gap-2">
+          <div>
+            <span class="text-slate-500 block text-[10px]">Inercia $I_x$</span>
+            <span id="specIx" class="font-mono text-blue-300 font-semibold">-</span> $\text{cm}^4$
+          </div>
+          <div>
+            <span class="text-slate-500 block text-[10px]">Área $A$</span>
+            <span id="specArea" class="font-mono text-emerald-300 font-semibold">-</span> $\text{cm}^2$
+          </div>
+          <div>
+            <span class="text-slate-500 block text-[10px]">Radio Giro $r_x$</span>
+            <span id="specRx" class="font-mono text-amber-300 font-semibold">-</span> $\text{cm}$
+          </div>
+          <div>
+            <span class="text-slate-500 block text-[10px]">Módulo $W_x$</span>
+            <span id="specWx" class="font-mono text-indigo-300 font-semibold">-</span> $\text{cm}^3$
+          </div>
+          <div>
+            <span class="text-slate-500 block text-[10px]">Altura $h$</span>
+            <span id="specH" class="font-mono text-slate-300 font-semibold">-</span> $\text{mm}$
+          </div>
+          <div>
+            <span class="text-slate-500 block text-[10px]">Peso Lineal</span>
+            <span id="specWeight" class="font-mono text-slate-300 font-semibold">-</span> $\text{kg/m}$
+          </div>
+        </div>
+      </div>
+
+      <!-- Apoyos Structurales -->
+      <div class="bg-slate-800/80 backdrop-blur rounded-xl border border-slate-700 p-4 shadow-lg">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-700 mb-3">
+          <h2 class="text-sm font-semibold text-emerald-400 uppercase tracking-wider flex items-center gap-2">
+            <i class="fa-solid fa-anchor"></i> Condición de Apoyos
+          </h2>
+          <button onclick="addSupportRow()" class="text-xs bg-emerald-600/20 hover:bg-emerald-600/40 text-emerald-300 border border-emerald-700/50 px-2 py-1 rounded transition flex items-center gap-1">
+            <i class="fa-solid fa-plus"></i> Agregar
+          </button>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs text-left">
+            <thead class="text-[11px] uppercase text-slate-400 bg-slate-900/60">
+              <tr>
+                <th class="p-2">Tipo</th>
+                <th class="p-2">Posición $x$ (m)</th>
+                <th class="p-2 text-right">Acción</th>
+              </tr>
+            </thead>
+            <tbody id="supportsTableBody">
+              <!-- Dynamic Rows -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Cargas Puntuales -->
+      <div class="bg-slate-800/80 backdrop-blur rounded-xl border border-slate-700 p-4 shadow-lg">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-700 mb-3">
+          <h2 class="text-sm font-semibold text-amber-400 uppercase tracking-wider flex items-center gap-2">
+            <i class="fa-solid fa-arrows-down-to-line"></i> Cargas Puntuales
+          </h2>
+          <button onclick="addPointLoadRow()" class="text-xs bg-amber-600/20 hover:bg-amber-600/40 text-amber-300 border border-amber-700/50 px-2 py-1 rounded transition flex items-center gap-1">
+            <i class="fa-solid fa-plus"></i> Agregar
+          </button>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs text-left">
+            <thead class="text-[11px] uppercase text-slate-400 bg-slate-900/60">
+              <tr>
+                <th class="p-2">Pos $x$ (m)</th>
+                <th class="p-2">Vertical $P_y$ (kN)</th>
+                <th class="p-2">Axial $P_x$ (kN)</th>
+                <th class="p-2 text-right">Acción</th>
+              </tr>
+            </thead>
+            <tbody id="pointLoadsTableBody">
+              <!-- Dynamic Rows -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Cargas Distribuidas -->
+      <div class="bg-slate-800/80 backdrop-blur rounded-xl border border-slate-700 p-4 shadow-lg">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-700 mb-3">
+          <h2 class="text-sm font-semibold text-purple-400 uppercase tracking-wider flex items-center gap-2">
+            <i class="fa-solid fa-bars-staggered"></i> Cargas Distribuidas
+          </h2>
+          <button onclick="addDistLoadRow()" class="text-xs bg-purple-600/20 hover:bg-purple-600/40 text-purple-300 border border-purple-700/50 px-2 py-1 rounded transition flex items-center gap-1">
+            <i class="fa-solid fa-plus"></i> Agregar
+          </button>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs text-left">
+            <thead class="text-[11px] uppercase text-slate-400 bg-slate-900/60">
+              <tr>
+                <th class="p-2">$x_1 \to x_2$ (m)</th>
+                <th class="p-2">$q_1 \to q_2$ (kN/m)</th>
+                <th class="p-2 text-right">Acción</th>
+              </tr>
+            </thead>
+            <tbody id="distLoadsTableBody">
+              <!-- Dynamic Rows -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT COLUMN: Results & Graphics (7 Cols) -->
+    <div class="lg:col-span-7 flex flex-col gap-5">
+      
+      <!-- Key Maximum Results Cards -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        
+        <!-- Max Moment -->
+        <div class="bg-slate-800 border border-slate-700 rounded-xl p-3.5 shadow-lg relative overflow-hidden group">
+          <div class="absolute top-0 right-0 w-2 h-full bg-emerald-500"></div>
+          <span class="text-[11px] text-slate-400 font-medium uppercase tracking-wider block">Momento Máx ($M$)</span>
+          <div class="flex items-baseline gap-1 mt-1">
+            <span id="resMaxM" class="text-xl font-bold font-mono text-emerald-400">0.00</span>
+            <span class="text-xs text-slate-400">kN·m</span>
+          </div>
+          <p class="text-[11px] text-slate-400 mt-1">Ubicación: <span id="resPosXM" class="font-mono text-slate-200 font-medium">0.00</span> m</p>
+        </div>
+
+        <!-- Max Shear -->
+        <div class="bg-slate-800 border border-slate-700 rounded-xl p-3.5 shadow-lg relative overflow-hidden group">
+          <div class="absolute top-0 right-0 w-2 h-full bg-blue-500"></div>
+          <span class="text-[11px] text-slate-400 font-medium uppercase tracking-wider block">Corte Máx ($V$)</span>
+          <div class="flex items-baseline gap-1 mt-1">
+            <span id="resMaxV" class="text-xl font-bold font-mono text-blue-400">0.00</span>
+            <span class="text-xs text-slate-400">kN</span>
+          </div>
+          <p class="text-[11px] text-slate-400 mt-1">Ubicación: <span id="resPosXV" class="font-mono text-slate-200 font-medium">0.00</span> m</p>
+        </div>
+
+        <!-- Max Axial -->
+        <div class="bg-slate-800 border border-slate-700 rounded-xl p-3.5 shadow-lg relative overflow-hidden group">
+          <div class="absolute top-0 right-0 w-2 h-full bg-amber-500"></div>
+          <span class="text-[11px] text-slate-400 font-medium uppercase tracking-wider block">Axial Máx ($N$)</span>
+          <div class="flex items-baseline gap-1 mt-1">
+            <span id="resMaxN" class="text-xl font-bold font-mono text-amber-400">0.00</span>
+            <span class="text-xs text-slate-400">kN</span>
+          </div>
+          <p class="text-[11px] text-slate-400 mt-1">Ubicación: <span id="resPosXN" class="font-mono text-slate-200 font-medium">0.00</span> m</p>
+        </div>
+
+        <!-- Max Deflection -->
+        <div class="bg-slate-800 border border-slate-700 rounded-xl p-3.5 shadow-lg relative overflow-hidden group">
+          <div class="absolute top-0 right-0 w-2 h-full bg-purple-500"></div>
+          <span class="text-[11px] text-slate-400 font-medium uppercase tracking-wider block">Deflexión ($\delta$)</span>
+          <div class="flex items-baseline gap-1 mt-1">
+            <span id="resMaxDef" class="text-xl font-bold font-mono text-purple-400">0.00</span>
+            <span class="text-xs text-slate-400">mm</span>
+          </div>
+          <p class="text-[11px] text-slate-400 mt-1">Ubicación: <span id="resPosXDef" class="font-mono text-slate-200 font-medium">0.00</span> m</p>
+        </div>
+
+      </div>
+
+      <!-- Beam Schematic Canvas Visualizer -->
+      <div class="bg-slate-800/90 backdrop-blur rounded-xl border border-slate-700 p-4 shadow-lg">
+        <div class="flex items-center justify-between mb-2">
+          <h3 class="text-xs font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-2">
+            <i class="fa-solid fa-drafting-compass text-blue-400"></i> Esquema Físico de Cargas y Apoyos
+          </h3>
+          <span id="indeterminacyBadge" class="text-[11px] px-2 py-0.5 rounded bg-slate-900 border text-slate-300 font-mono">
+            Grado: Estáticamente Determinado
+          </span>
+        </div>
+        <div class="relative w-full bg-slate-950 rounded-lg border border-slate-800 p-2 overflow-hidden">
+          <canvas id="beamCanvas" class="w-full h-44 block"></canvas>
+        </div>
+      </div>
+
+      <!-- Diagram Tabs and Chart Display -->
+      <div class="bg-slate-800/90 backdrop-blur rounded-xl border border-slate-700 p-4 shadow-lg flex-1 flex flex-col">
+        
+        <!-- Tab Navigation & Action Button -->
+        <div class="flex items-center justify-between border-b border-slate-700 mb-4 pb-2">
+          <div class="flex overflow-x-auto text-xs gap-1">
+            <button onclick="switchTab('moment')" id="tab-moment" class="tab-btn active px-3 py-2 font-semibold border-b-2 border-transparent hover:text-blue-400 transition flex items-center gap-1.5 whitespace-nowrap">
+              <i class="fa-solid fa-chart-line text-emerald-400"></i> Momento $M(x)$
+            </button>
+            <button onclick="switchTab('shear')" id="tab-shear" class="tab-btn px-3 py-2 font-semibold border-b-2 border-transparent hover:text-blue-400 transition flex items-center gap-1.5 whitespace-nowrap">
+              <i class="fa-solid fa-chart-area text-blue-400"></i> Cortante $V(x)$
+            </button>
+            <button onclick="switchTab('axial')" id="tab-axial" class="tab-btn px-3 py-2 font-semibold border-b-2 border-transparent hover:text-blue-400 transition flex items-center gap-1.5 whitespace-nowrap">
+              <i class="fa-solid fa-arrows-left-right text-amber-400"></i> Axial $N(x)$
+            </button>
+            <button onclick="switchTab('elastic')" id="tab-elastic" class="tab-btn px-3 py-2 font-semibold border-b-2 border-transparent hover:text-blue-400 transition flex items-center gap-1.5 whitespace-nowrap">
+              <i class="fa-solid fa-wave-square text-purple-400"></i> Deflexión $\delta(x)$
+            </button>
+          </div>
+          <button onclick="toggleEquationsModal()" class="text-xs bg-indigo-600/30 hover:bg-indigo-600/50 text-indigo-300 border border-indigo-500/40 px-2.5 py-1.5 rounded-lg transition flex items-center gap-1.5">
+            <i class="fa-solid fa-code"></i> Ver Ecuaciones
+          </button>
+        </div>
+
+        <!-- Chart Canvas Container -->
+        <div class="relative flex-1 min-h-[280px] bg-slate-950 rounded-lg p-2 border border-slate-800">
+          <canvas id="diagramChart"></canvas>
+        </div>
+
+      </div>
+
+      <!-- Support Reactions Table -->
+      <div class="bg-slate-800/80 backdrop-blur rounded-xl border border-slate-700 p-4 shadow-lg">
+        <h3 class="text-xs font-semibold text-slate-300 uppercase tracking-wider mb-3 flex items-center gap-2">
+          <i class="fa-solid fa-table-cells text-emerald-400"></i> Reacciones en los Apoyos
+        </h3>
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs text-left">
+            <thead class="text-[11px] uppercase text-slate-400 bg-slate-900/80 border-b border-slate-700">
+              <tr>
+                <th class="p-2.5">Apoyo</th>
+                <th class="p-2.5">Posición $x$</th>
+                <th class="p-2.5">Reacción Horiz. $R_x$ (kN)</th>
+                <th class="p-2.5">Reacción Vert. $R_y$ (kN)</th>
+                <th class="p-2.5">Momento $M_z$ (kN·m)</th>
+              </tr>
+            </thead>
+            <tbody id="reactionsTableBody" class="divide-y divide-slate-700/60 font-mono">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- MODAL FOR ANALYTICAL EQUATIONS (V, M, N, Deflection) -->
+  <div id="equationsModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-3xl w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
+      <div class="p-4 border-b border-slate-700 flex items-center justify-between bg-slate-800/90">
+        <h3 class="text-base font-bold text-white flex items-center gap-2">
+          <i class="fa-solid fa-square-root-variable text-indigo-400"></i> Ecuaciones Analíticas por Tramo
+        </h3>
+        <button onclick="toggleEquationsModal()" class="text-slate-400 hover:text-white p-1 rounded-lg">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+      <div id="equationsModalContent" class="p-6 overflow-y-auto space-y-6 text-xs text-slate-300">
+        <!-- Dynamically generated equation blocks per segment -->
+      </div>
+      <div class="p-3 border-t border-slate-700 bg-slate-800/90 text-right">
+        <button onclick="toggleEquationsModal()" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-xs rounded-md">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal for Castigliano Theory Explanation -->
+  <div id="theoryModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
+      <div class="p-4 border-b border-slate-700 flex items-center justify-between bg-slate-800/90">
+        <h3 class="text-base font-bold text-white flex items-center gap-2">
+          <i class="fa-solid fa-graduation-cap text-blue-400"></i> Fundamento Teórico: Segundo Teorema de Castigliano
+        </h3>
+        <button onclick="toggleTheoryModal()" class="text-slate-400 hover:text-white p-1 rounded-lg">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+      <div class="p-6 overflow-y-auto space-y-4 text-xs leading-relaxed text-slate-300">
+        <p>
+          El <strong class="text-blue-300">Segundo Teorema de Castigliano</strong> establece que en cualquier estructura linealmente elástica, la primera derivada parcial de la energía interna de deformación total ($U$) respecto a una fuerza puntual aplicada ($P$) es igual al desplazamiento ($\delta$) en el punto de aplicación y en la dirección de dicha fuerza:
+        </p>
+        <div class="p-3 bg-slate-900 rounded-lg border border-slate-700 font-mono text-center text-blue-300 text-sm">
+          $$\delta_i = \frac{\partial U}{\partial P_i}$$
+        </div>
+
+        <h4 class="font-semibold text-slate-200 text-sm mt-3">Energía de Deformación Interna por Flexión y Axial</h4>
+        <p>Para un elemento tipo viga sometido a momento flector $M(x)$ y esfuerzo axial $N(x)$:</p>
+        <div class="p-3 bg-slate-900 rounded-lg border border-slate-700 font-mono text-center text-emerald-300 text-xs">
+          $$U = \int_0^L \frac{[M(x)]^2}{2 E I_x} \, dx + \int_0^L \frac{[N(x)]^2}{2 E A} \, dx$$
+        </div>
+
+        <h4 class="font-semibold text-slate-200 text-sm mt-3">Resolución de Estructuras Hiperestáticas (Trabajo Mínimo)</h4>
+        <p>
+          Para vigas hiperestáticas con reacciones redundantes $R_j$, la condición de compatibilidad de desplazamientos nulos en los apoyos exige que:
+        </p>
+        <div class="p-3 bg-slate-900 rounded-lg border border-slate-700 font-mono text-center text-amber-300 text-xs">
+          $$\frac{\partial U}{\partial R_j} = \int_0^L \frac{M(x)}{E I_x} \left(\frac{\partial M(x)}{\partial R_j}\right) dx + \int_0^L \frac{N(x)}{E A} \left(\frac{\partial N(x)}{\partial R_j}\right) dx = 0$$
+        </div>
+        <p>
+          Formulando la matriz de flexibilidad $[F]$ a través de estas integrales, la planilla resuelve con precisión milimétrica las reacciones desconocidas y obtiene las ecuaciones de la curva elástica $\delta(x)$ mediante cargas ficticias en cada sección.
+        </p>
+      </div>
+      <div class="p-3 border-t border-slate-700 bg-slate-800/90 text-right">
+        <button onclick="toggleTheoryModal()" class="px-4 py-1.5 bg-blue-600 hover:bg-blue-500 text-white font-medium text-xs rounded-md">Entendido</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // --- DATABASE OF EUROPEAN IPE STEEL PROFILES ---
+    const IPE_DATABASE = {
+      "IPE 80":  { h: 80,  b: 46,  tw: 3.8, tf: 5.2, A: 7.64,  Ix: 80.1,   Wx: 20.0,  ix: 3.24, Iy: 8.49,  weight: 6.0 },
+      "IPE 100": { h: 100, b: 55,  tw: 4.1, tf: 5.7, A: 10.3,  Ix: 171.0,  Wx: 34.2,  ix: 4.07, Iy: 15.9,  weight: 8.1 },
+      "IPE 120": { h: 120, b: 64,  tw: 4.4, tf: 6.3, A: 13.2,  Ix: 318.0,  Wx: 53.0,  ix: 4.90, Iy: 27.7,  weight: 10.4 },
+      "IPE 140": { h: 140, b: 73,  tw: 4.7, tf: 6.9, A: 16.4,  Ix: 541.0,  Wx: 77.3,  ix: 5.74, Iy: 44.9,  weight: 12.9 },
+      "IPE 160": { h: 160, b: 82,  tw: 5.0, tf: 7.4, A: 20.1,  Ix: 869.0,  Wx: 109.0, ix: 6.58, Iy: 68.3,  weight: 15.8 },
+      "IPE 180": { h: 180, b: 91,  tw: 5.3, tf: 8.0, A: 23.9,  Ix: 1317.0, Wx: 146.0, ix: 7.42, Iy: 101.0, weight: 18.8 },
+      "IPE 200": { h: 200, b: 100, tw: 5.6, tf: 8.5, A: 28.5,  Ix: 1943.0, Wx: 194.0, ix: 8.26, Iy: 142.0, weight: 22.4 },
+      "IPE 220": { h: 220, b: 110, tw: 5.9, tf: 9.2, A: 33.4,  Ix: 2772.0, Wx: 252.0, ix: 9.11, Iy: 205.0, weight: 26.2 },
+      "IPE 240": { h: 240, b: 120, tw: 6.2, tf: 9.8, A: 39.1,  Ix: 3892.0, Wx: 324.0, ix: 9.97, Iy: 284.0, weight: 30.7 },
+      "IPE 270": { h: 270, b: 135, tw: 6.6, tf: 10.2, A: 45.9, Ix: 5790.0, Wx: 429.0, ix: 11.2, Iy: 420.0, weight: 36.1 },
+      "IPE 300": { h: 300, b: 150, tw: 7.1, tf: 10.7, A: 53.8, Ix: 8356.0, Wx: 557.0, ix: 12.5, Iy: 604.0, weight: 42.2 },
+      "IPE 330": { h: 330, b: 160, tw: 7.5, tf: 11.5, A: 62.6, Ix: 11770.0,Wx: 713.0, ix: 13.7, Iy: 788.0, weight: 49.1 },
+      "IPE 360": { h: 360, b: 170, tw: 8.0, tf: 12.7, A: 72.7, Ix: 16270.0,Wx: 904.0, ix: 15.0, Iy: 1043.0,weight: 57.1 },
+      "IPE 400": { h: 400, b: 180, tw: 8.6, tf: 13.5, A: 84.5, Ix: 23130.0,Wx: 1156.0,ix: 16.5, Iy: 1318.0,weight: 66.3 },
+      "IPE 450": { h: 450, b: 190, tw: 9.4, tf: 14.6, A: 98.8, Ix: 33740.0,Wx: 1500.0,ix: 18.5, Iy: 1676.0,weight: 77.6 },
+      "IPE 500": { h: 500, b: 200, tw: 10.2, tf: 16.0, A: 116.0,Ix: 48200.0,Wx: 1930.0,ix: 20.4, Iy: 2140.0,weight: 90.7 },
+      "IPE 550": { h: 550, b: 210, tw: 11.1, tf: 17.2, A: 134.0,Ix: 67120.0,Wx: 2440.0,ix: 22.4, Iy: 2670.0,weight: 106.0 },
+      "IPE 600": { h: 600, b: 220, tw: 12.0, tf: 19.0, A: 156.0,Ix: 92080.0,Wx: 3070.0,ix: 24.3, Iy: 3387.0,weight: 122.0 }
+    };
+
+    // --- APPLICATION STATE ---
+    let beamLength = 9.0;      // meters
+    let youngModulus = 210.0;   // GPa
+    let currentIpeKey = "IPE 240";
+    let activeTab = "moment";   // 'moment' | 'shear' | 'axial' | 'elastic'
+
+    // Supports array: { id, type: 'pin'|'roller'|'fixed', x }
+    let supports = [];
+    // Point loads array: { id, x, Py (vertical downward kN), Px (axial rightward kN) }
+    let pointLoads = [];
+    // Distributed loads array: { id, x1, x2, q1, q2 (kN/m downward) }
+    let distLoads = [];
+
+    // Solution cache
+    let lastSolution = null;
+
+    // Chart.js instance
+    let myChart = null;
+
+    // --- INITIALIZATION ---
+    window.onload = function() {
+      populateIpeDropdown();
+      loadTestPreset();
+    };
+
+    // Trigger KaTeX parsing on HTML elements
+    function triggerMathRender() {
+      if (window.renderMathInElement) {
+        window.renderMathInElement(document.body, {
+          delimiters: [
+            { left: "$$", right: "$$", display: true },
+            { left: "$", right: "$", display: false }
+          ],
+          throwOnError: false
+        });
+      }
+    }
+
+    function populateIpeDropdown() {
+      const select = document.getElementById('ipeSelect');
+      select.innerHTML = '';
+      for (const key in IPE_DATABASE) {
+        const option = document.createElement('option');
+        option.value = key;
+        option.textContent = `${key} (Ix = ${IPE_DATABASE[key].Ix} cm⁴, A = ${IPE_DATABASE[key].A} cm²)`;
+        if (key === currentIpeKey) option.selected = true;
+        select.appendChild(option);
+      }
+      updateIpeCard();
+    }
+
+    function onIpeChange() {
+      currentIpeKey = document.getElementById('ipeSelect').value;
+      updateIpeCard();
+      calculateAndRender();
+    }
+
+    function updateIpeCard() {
+      const spec = IPE_DATABASE[currentIpeKey];
+      document.getElementById('specIx').textContent = spec.Ix;
+      document.getElementById('specArea').textContent = spec.A;
+      document.getElementById('specRx').textContent = spec.ix;
+      document.getElementById('specWx').textContent = spec.Wx;
+      document.getElementById('specH').textContent = spec.h;
+      document.getElementById('specWeight').textContent = spec.weight;
+    }
+
+    // --- PRESET LOADER (Test Problem: Pin at 0m, Roller at 4.5m, Roller at 9.0m) ---
+    function loadTestPreset() {
+      beamLength = 9.0;
+      document.getElementById('beamLength').value = "9.0";
+      youngModulus = 210.0;
+      document.getElementById('youngModulus').value = "210";
+      currentIpeKey = "IPE 240";
+      document.getElementById('ipeSelect').value = currentIpeKey;
+      updateIpeCard();
+
+      // Supports: Pin at x=0.0m, Roller at x=4.5m, Roller at x=9.0m
+      supports = [
+        { id: 1, type: 'pin', x: 0.0 },
+        { id: 2, type: 'roller', x: 4.5 },
+        { id: 3, type: 'roller', x: 9.0 }
+      ];
+
+      // Loads every 2.5m (x = 2.5m, 5.0m, 7.5m)
+      pointLoads = [
+        { id: 1, x: 2.5, Py: 20.0, Px: 10.0 },
+        { id: 2, x: 5.0, Py: 25.0, Px: 0.0 },
+        { id: 3, x: 7.5, Py: 20.0, Px: 0.0 }
+      ];
+
+      distLoads = [];
+
+      renderTables();
+      calculateAndRender();
+    }
+
+    function updateBeamData() {
+      beamLength = parseFloat(document.getElementById('beamLength').value) || 9.0;
+      youngModulus = parseFloat(document.getElementById('youngModulus').value) || 210.0;
+      calculateAndRender();
+    }
+
+    // --- TABLES MANAGEMENT ---
+    function renderTables() {
+      // Supports Table
+      const supBody = document.getElementById('supportsTableBody');
+      supBody.innerHTML = '';
+      supports.forEach((s, idx) => {
+        const tr = document.createElement('tr');
+        tr.className = "border-b border-slate-700/50 hover:bg-slate-800/50";
+        tr.innerHTML = `
+          <td class="p-2">
+            <select onchange="updateSupport(${idx}, 'type', this.value)" class="bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs">
+              <option value="pin" ${s.type === 'pin' ? 'selected' : ''}>Fijo (Pin)</option>
+              <option value="roller" ${s.type === 'roller' ? 'selected' : ''}>Móvil (Roller)</option>
+              <option value="fixed" ${s.type === 'fixed' ? 'selected' : ''}>Empotrado</option>
+            </select>
+          </td>
+          <td class="p-2">
+            <input type="number" step="0.1" min="0" max="${beamLength}" value="${s.x}" onchange="updateSupport(${idx}, 'x', this.value)" class="w-20 bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs font-mono">
+          </td>
+          <td class="p-2 text-right">
+            <button onclick="removeSupport(${idx})" class="text-rose-400 hover:text-rose-300 p-1"><i class="fa-solid fa-trash-can"></i></button>
+          </td>
+        `;
+        supBody.appendChild(tr);
+      });
+
+      // Point Loads Table
+      const plBody = document.getElementById('pointLoadsTableBody');
+      plBody.innerHTML = '';
+      pointLoads.forEach((pl, idx) => {
+        const tr = document.createElement('tr');
+        tr.className = "border-b border-slate-700/50 hover:bg-slate-800/50";
+        tr.innerHTML = `
+          <td class="p-2">
+            <input type="number" step="0.1" min="0" max="${beamLength}" value="${pl.x}" onchange="updatePointLoad(${idx}, 'x', this.value)" class="w-16 bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs font-mono">
+          </td>
+          <td class="p-2">
+            <input type="number" step="1" value="${pl.Py}" onchange="updatePointLoad(${idx}, 'Py', this.value)" class="w-16 bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs font-mono">
+          </td>
+          <td class="p-2">
+            <input type="number" step="1" value="${pl.Px}" onchange="updatePointLoad(${idx}, 'Px', this.value)" class="w-16 bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs font-mono">
+          </td>
+          <td class="p-2 text-right">
+            <button onclick="removePointLoad(${idx})" class="text-rose-400 hover:text-rose-300 p-1"><i class="fa-solid fa-trash-can"></i></button>
+          </td>
+        `;
+        plBody.appendChild(tr);
+      });
+
+      // Distributed Loads Table
+      const dlBody = document.getElementById('distLoadsTableBody');
+      dlBody.innerHTML = '';
+      distLoads.forEach((dl, idx) => {
+        const tr = document.createElement('tr');
+        tr.className = "border-b border-slate-700/50 hover:bg-slate-800/50";
+        tr.innerHTML = `
+          <td class="p-2 flex items-center gap-1">
+            <input type="number" step="0.1" value="${dl.x1}" onchange="updateDistLoad(${idx}, 'x1', this.value)" class="w-14 bg-slate-900 border border-slate-700 rounded px-1.5 py-1 text-xs font-mono">
+            <span>-</span>
+            <input type="number" step="0.1" value="${dl.x2}" onchange="updateDistLoad(${idx}, 'x2', this.value)" class="w-14 bg-slate-900 border border-slate-700 rounded px-1.5 py-1 text-xs font-mono">
+          </td>
+          <td class="p-2">
+            <input type="number" step="1" value="${dl.q1}" onchange="updateDistLoad(${idx}, 'q1', this.value)" class="w-14 bg-slate-900 border border-slate-700 rounded px-1.5 py-1 text-xs font-mono">
+          </td>
+          <td class="p-2 text-right">
+            <button onclick="removeDistLoad(${idx})" class="text-rose-400 hover:text-rose-300 p-1"><i class="fa-solid fa-trash-can"></i></button>
+          </td>
+        `;
+        dlBody.appendChild(tr);
+      });
+    }
+
+    function addSupportRow() {
+      supports.push({ id: Date.now(), type: 'roller', x: parseFloat((beamLength/2).toFixed(1)) });
+      renderTables();
+      calculateAndRender();
+    }
+    function updateSupport(idx, field, val) {
+      supports[idx][field] = field === 'type' ? val : parseFloat(val);
+      calculateAndRender();
+    }
+    function removeSupport(idx) {
+      if (supports.length <= 2) {
+        alert("Se requieren al menos 2 apoyos para mantener la estabilidad.");
+        return;
+      }
+      supports.splice(idx, 1);
+      renderTables();
+      calculateAndRender();
+    }
+
+    function addPointLoadRow() {
+      pointLoads.push({ id: Date.now(), x: parseFloat((beamLength/2).toFixed(1)), Py: 20.0, Px: 0.0 });
+      renderTables();
+      calculateAndRender();
+    }
+    function updatePointLoad(idx, field, val) {
+      pointLoads[idx][field] = parseFloat(val);
+      calculateAndRender();
+    }
+    function removePointLoad(idx) {
+      pointLoads.splice(idx, 1);
+      renderTables();
+      calculateAndRender();
+    }
+
+    function addDistLoadRow() {
+      distLoads.push({ id: Date.now(), x1: 0.0, x2: beamLength, q1: 10.0, q2: 10.0 });
+      renderTables();
+      calculateAndRender();
+    }
+    function updateDistLoad(idx, field, val) {
+      distLoads[idx][field] = parseFloat(val);
+      calculateAndRender();
+    }
+    function removeDistLoad(idx) {
+      distLoads.splice(idx, 1);
+      renderTables();
+      calculateAndRender();
+    }
+
+    function solveBeamStructure() {
+      const numPts = 300;
+      const dx = beamLength / (numPts - 1);
+      const profile = IPE_DATABASE[currentIpeKey];
+
+      // Conversion to SI Units
+      const E = youngModulus * 1e9; // Pa
+      const Ix = profile.Ix * 1e-8; // m^4
+      const A = profile.A * 1e-4;   // m^2
+      const EI = E * Ix;
+      const EA = E * A;
+
+      let reactionComponents = [];
+      supports.forEach((s, sIdx) => {
+        if (s.type === 'pin') {
+          reactionComponents.push({ supIndex: sIdx, type: 'Rx', x: s.x });
+          reactionComponents.push({ supIndex: sIdx, type: 'Ry', x: s.x });
+        } else if (s.type === 'roller') {
+          reactionComponents.push({ supIndex: sIdx, type: 'Ry', x: s.x });
+        } else if (s.type === 'fixed') {
+          reactionComponents.push({ supIndex: sIdx, type: 'Rx', x: s.x });
+          reactionComponents.push({ supIndex: sIdx, type: 'Ry', x: s.x });
+          reactionComponents.push({ supIndex: sIdx, type: 'Mz', x: s.x });
+        }
+      });
+
+      const degIndeterminacy = reactionComponents.length - 3;
+      
+      let primaryRxIdx = reactionComponents.findIndex(r => r.type === 'Rx');
+      if (primaryRxIdx === -1) primaryRxIdx = 0;
+
+      let ryIndices = [];
+      reactionComponents.forEach((r, idx) => {
+        if (r.type === 'Ry') ryIndices.push(idx);
+      });
+
+      let primaryRy1Idx = ryIndices[0] !== undefined ? ryIndices[0] : 0;
+      let primaryRy2Idx = ryIndices[1] !== undefined ? ryIndices[1] : 1;
+
+      let primaryIndices = new Set([primaryRxIdx, primaryRy1Idx, primaryRy2Idx]);
+      if (primaryIndices.size < 3) {
+        primaryIndices = new Set([0, 1, 2]);
+      }
+
+      let redundantIndices = [];
+      reactionComponents.forEach((r, idx) => {
+        if (!primaryIndices.has(idx)) redundantIndices.push(idx);
+      });
+
+      let xVals = [];
+      for (let i = 0; i < numPts; i++) {
+        xVals.push(i * dx);
+      }
+
+      function calcPrimaryState(extPointLoads, extDistLoads, unitRedundantComp) {
+        let pIndicesArr = Array.from(primaryIndices);
+        let comp1 = reactionComponents[pIndicesArr[0]];
+        let comp2 = reactionComponents[pIndicesArr[1]];
+        let comp3 = reactionComponents[pIndicesArr[2]];
+
+        let MatA = [
+          [comp1.type==='Rx'?1:0, comp2.type==='Rx'?1:0, comp3.type==='Rx'?1:0],
+          [comp1.type==='Ry'?1:0, comp2.type==='Ry'?1:0, comp3.type==='Ry'?1:0],
+          [
+            comp1.type==='Ry' ? comp1.x : (comp1.type==='Mz'?1:0),
+            comp2.type==='Ry' ? comp2.x : (comp2.type==='Mz'?1:0),
+            comp3.type==='Ry' ? comp3.x : (comp3.type==='Mz'?1:0)
+          ]
+        ];
+
+        let VecB = [0, 0, 0];
+
+        extPointLoads.forEach(pl => {
+          VecB[0] += pl.Px;
+          VecB[1] += pl.Py;
+          VecB[2] += pl.Py * pl.x;
+        });
+
+        extDistLoads.forEach(dl => {
+          const len = dl.x2 - dl.x1;
+          if (len > 0) {
+            const wAvg = (dl.q1 + dl.q2) / 2;
+            const Ftotal = wAvg * len;
+            const xCentroid = dl.x1 + len * (dl.q1 + 2*dl.q2)/(3*(dl.q1 + dl.q2) || 1);
+            VecB[1] += Ftotal;
+            VecB[2] += Ftotal * xCentroid;
+          }
+        });
+
+        if (unitRedundantComp) {
+          if (unitRedundantComp.type === 'Rx') {
+            VecB[0] -= 1;
+          } else if (unitRedundantComp.type === 'Ry') {
+            VecB[1] -= 1;
+            VecB[2] -= 1 * unitRedundantComp.x;
+          } else if (unitRedundantComp.type === 'Mz') {
+            VecB[2] -= 1;
+          }
+        }
+
+        let Rprim = solve3x3(MatA, VecB);
+
+        let N = new Array(numPts).fill(0);
+        let V = new Array(numPts).fill(0);
+        let M = new Array(numPts).fill(0);
+
+        for (let i = 0; i < numPts; i++) {
+          const x = xVals[i];
+
+          pIndicesArr.forEach((pIdx, k) => {
+            const rComp = reactionComponents[pIdx];
+            const rVal = Rprim[k];
+            if (rComp.x <= x + 1e-7) {
+              if (rComp.type === 'Rx') N[i] += rVal;
+              if (rComp.type === 'Ry') V[i] += rVal;
+              if (rComp.type === 'Ry') M[i] += rVal * (x - rComp.x);
+              if (rComp.type === 'Mz') M[i] += rVal;
+            }
+          });
+
+          if (unitRedundantComp && unitRedundantComp.x <= x + 1e-7) {
+            if (unitRedundantComp.type === 'Rx') N[i] += 1;
+            if (unitRedundantComp.type === 'Ry') V[i] += 1;
+            if (unitRedundantComp.type === 'Ry') M[i] += 1 * (x - unitRedundantComp.x);
+            if (unitRedundantComp.type === 'Mz') M[i] += 1;
+          }
+
+          extPointLoads.forEach(pl => {
+            if (pl.x <= x + 1e-7) {
+              N[i] -= pl.Px;
+              V[i] -= pl.Py;
+              M[i] -= pl.Py * (x - pl.x);
+            }
+          });
+
+          extDistLoads.forEach(dl => {
+            if (x > dl.x1) {
+              const xUpper = Math.min(x, dl.x2);
+              const Lsub = xUpper - dl.x1;
+              if (Lsub > 0) {
+                const qUpper = dl.q1 + (dl.q2 - dl.q1) * (xUpper - dl.x1) / (dl.x2 - dl.x1);
+                const Fsub = (dl.q1 + qUpper) / 2 * Lsub;
+                const xC = dl.x1 + Lsub * (dl.q1 + 2*qUpper) / (3*(dl.q1 + qUpper) || 1);
+                V[i] -= Fsub;
+                M[i] -= Fsub * (x - xC);
+              }
+            }
+          });
+        }
+
+        return { N, V, M, Rprim };
+      }
+
+      let State0 = calcPrimaryState(pointLoads, distLoads, null);
+
+      let UnitStates = [];
+      redundantIndices.forEach(rIdx => {
+        const comp = reactionComponents[rIdx];
+        UnitStates.push(calcPrimaryState([], [], comp));
+      });
+
+      const kRed = redundantIndices.length;
+      let RedundantValues = new Array(kRed).fill(0);
+
+      if (kRed > 0) {
+        let FlexMatrix = Array.from({ length: kRed }, () => new Array(kRed).fill(0));
+        let VecD0 = new Array(kRed).fill(0);
+
+        for (let i = 0; i < kRed; i++) {
+          for (let j = 0; j < kRed; j++) {
+            let sum = 0;
+            for (let p = 0; p < numPts; p++) {
+              const weight = (p === 0 || p === numPts - 1) ? 0.5 : 1.0;
+              const m_i = UnitStates[i].M[p];
+              const m_j = UnitStates[j].M[p];
+              const n_i = UnitStates[i].N[p];
+              const n_j = UnitStates[j].N[p];
+              sum += weight * ((m_i * m_j / EI) + (n_i * n_j / EA)) * dx;
+            }
+            FlexMatrix[i][j] = sum;
+          }
+
+          let sumD0 = 0;
+          for (let p = 0; p < numPts; p++) {
+            const weight = (p === 0 || p === numPts - 1) ? 0.5 : 1.0;
+            const M0 = State0.M[p];
+            const N0 = State0.N[p];
+            const m_i = UnitStates[i].M[p];
+            const n_i = UnitStates[i].N[p];
+            sumD0 += weight * ((M0 * m_i / EI) + (N0 * n_i / EA)) * dx;
+          }
+          VecD0[i] = sumD0;
+        }
+
+        let NegVecD0 = VecD0.map(v => -v);
+        RedundantValues = solveLinearSystem(FlexMatrix, NegVecD0);
+      }
+
+      let N_total = [...State0.N];
+      let V_total = [...State0.V];
+      let M_total = [...State0.M];
+
+      for (let p = 0; p < numPts; p++) {
+        for (let j = 0; j < kRed; j++) {
+          N_total[p] += RedundantValues[j] * UnitStates[j].N[p];
+          V_total[p] += RedundantValues[j] * UnitStates[j].V[p];
+          M_total[p] += RedundantValues[j] * UnitStates[j].M[p];
+        }
+      }
+
+      let finalReactions = new Array(reactionComponents.length).fill(0);
+      let pIndicesArr = Array.from(primaryIndices);
+      pIndicesArr.forEach((pIdx, k) => {
+        finalReactions[pIdx] = State0.Rprim[k];
+        for (let j = 0; j < kRed; j++) {
+          finalReactions[pIdx] += RedundantValues[j] * UnitStates[j].Rprim[k];
+        }
+      });
+      redundantIndices.forEach((rIdx, j) => {
+        finalReactions[rIdx] = RedundantValues[j];
+      });
+
+      let delta_total = new Array(numPts).fill(0);
+
+      for (let p = 0; p < numPts; p++) {
+        const x_eval = xVals[p];
+        let dummyState = calcPrimaryState([{ x: x_eval, Py: 1.0, Px: 0.0 }], [], null);
+
+        let def_p = 0;
+        for (let k = 0; k < numPts; k++) {
+          const weight = (k === 0 || k === numPts - 1) ? 0.5 : 1.0;
+          const m_q = dummyState.M[k];
+          def_p += weight * (M_total[k] * m_q / EI) * dx;
+        }
+
+        delta_total[p] = def_p * 1000; // convert meters to mm
+      }
+
+      let maxM = 0, posXM = 0;
+      let maxV = 0, posXV = 0;
+      let maxN = 0, posXN = 0;
+      let maxDef = 0, posXDef = 0;
+
+      for (let i = 0; i < numPts; i++) {
+        if (Math.abs(M_total[i]) >= Math.abs(maxM)) {
+          maxM = M_total[i];
+          posXM = xVals[i];
+        }
+        if (Math.abs(V_total[i]) >= Math.abs(maxV)) {
+          maxV = V_total[i];
+          posXV = xVals[i];
+        }
+        if (Math.abs(N_total[i]) >= Math.abs(maxN)) {
+          maxN = N_total[i];
+          posXN = xVals[i];
+        }
+        if (Math.abs(delta_total[i]) >= Math.abs(maxDef)) {
+          maxDef = delta_total[i];
+          posXDef = xVals[i];
+        }
+      }
+
+      return {
+        xVals,
+        N: N_total,
+        V: V_total,
+        M: M_total,
+        delta: delta_total,
+        maxM, posXM,
+        maxV, posXV,
+        maxN, posXN,
+        maxDef, posXDef,
+        reactionComponents,
+        finalReactions,
+        degIndeterminacy,
+        EI, EA
+      };
+    }
+
+    function solve3x3(A, B) {
+      const det = A[0][0]*(A[1][1]*A[2][2] - A[1][2]*A[2][1])
+                - A[0][1]*(A[1][0]*A[2][2] - A[1][2]*A[2][0])
+                + A[0][2]*(A[1][0]*A[2][1] - A[1][1]*A[2][0]);
+      if (Math.abs(det) < 1e-12) return [0, 0, 0];
+
+      const inv00 = (A[1][1]*A[2][2] - A[1][2]*A[2][1]) / det;
+      const inv01 = (A[0][2]*A[2][1] - A[0][1]*A[2][2]) / det;
+      const inv02 = (A[0][1]*A[1][2] - A[0][2]*A[1][1]) / det;
+
+      const inv10 = (A[1][2]*A[2][0] - A[1][0]*A[2][2]) / det;
+      const inv11 = (A[0][0]*A[2][2] - A[0][2]*A[2][0]) / det;
+      const inv12 = (A[0][2]*A[1][0] - A[0][0]*A[1][2]) / det;
+
+      const inv20 = (A[1][0]*A[2][1] - A[1][1]*A[2][0]) / det;
+      const inv21 = (A[0][1]*A[2][0] - A[0][0]*A[2][1]) / det;
+      const inv22 = (A[0][0]*A[1][1] - A[0][1]*A[1][0]) / det;
+
+      return [
+        inv00*B[0] + inv01*B[1] + inv02*B[2],
+        inv10*B[0] + inv11*B[1] + inv12*B[2],
+        inv20*B[0] + inv21*B[1] + inv22*B[2]
+      ];
+    }
+
+    function solveLinearSystem(A, b) {
+      const n = b.length;
+      let M = [];
+      for (let i = 0; i < n; i++) M[i] = [...A[i], b[i]];
+
+      for (let i = 0; i < n; i++) {
+        let maxRow = i;
+        for (let k = i + 1; k < n; k++) {
+          if (Math.abs(M[k][i]) > Math.abs(M[maxRow][i])) maxRow = k;
+        }
+        let temp = M[i]; M[i] = M[maxRow]; M[maxRow] = temp;
+
+        if (Math.abs(M[i][i]) < 1e-12) return new Array(n).fill(0);
+
+        for (let k = i + 1; k < n; k++) {
+          let c = -M[k][i] / M[i][i];
+          for (let j = i; j <= n; j++) {
+            if (i === j) M[k][j] = 0;
+            else M[k][j] += c * M[i][j];
+          }
+        }
+      }
+
+      let x = new Array(n).fill(0);
+      for (let i = n - 1; i >= 0; i--) {
+        x[i] = M[i][n] / M[i][i];
+        for (let k = i - 1; k >= 0; k--) {
+          M[k][n] -= M[k][i] * x[i];
+        }
+      }
+      return x;
+    }
+
+    function calculateAndRender() {
+      const res = solveBeamStructure();
+      lastSolution = res;
+
+      document.getElementById('resMaxM').textContent = res.maxM.toFixed(2);
+      document.getElementById('resPosXM').textContent = res.posXM.toFixed(2);
+
+      document.getElementById('resMaxV').textContent = res.maxV.toFixed(2);
+      document.getElementById('resPosXV').textContent = res.posXV.toFixed(2);
+
+      document.getElementById('resMaxN').textContent = res.maxN.toFixed(2);
+      document.getElementById('resPosXN').textContent = res.posXN.toFixed(2);
+
+      document.getElementById('resMaxDef').textContent = res.maxDef.toFixed(3);
+      document.getElementById('resPosXDef').textContent = res.posXDef.toFixed(2);
+
+      const badge = document.getElementById('indeterminacyBadge');
+      if (res.degIndeterminacy === 0) {
+        badge.textContent = "Isostática (Grado 0)";
+        badge.className = "text-[11px] px-2 py-0.5 rounded bg-emerald-950/80 border border-emerald-700 text-emerald-300 font-mono";
+      } else if (res.degIndeterminacy > 0) {
+        badge.textContent = `Hiperestática (Grado ${res.degIndeterminacy})`;
+        badge.className = "text-[11px] px-2 py-0.5 rounded bg-amber-950/80 border border-amber-700 text-amber-300 font-mono";
+      } else {
+        badge.textContent = "Inestable (Revisar Apoyos)";
+        badge.className = "text-[11px] px-2 py-0.5 rounded bg-rose-950/80 border border-rose-700 text-rose-300 font-mono";
+      }
+
+      renderReactionsTable(res);
+      drawBeamCanvas(res);
+      updateDiagramChart(res);
+
+      // Re-render KaTeX math formatting
+      setTimeout(triggerMathRender, 50);
+    }
+
+    function renderReactionsTable(res) {
+      const tbody = document.getElementById('reactionsTableBody');
+      tbody.innerHTML = '';
+
+      supports.forEach((sup, supIdx) => {
+        let rx = 0, ry = 0, mz = 0;
+        res.reactionComponents.forEach((comp, idx) => {
+          if (comp.supIndex === supIdx) {
+            if (comp.type === 'Rx') rx = res.finalReactions[idx];
+            if (comp.type === 'Ry') ry = res.finalReactions[idx];
+            if (comp.type === 'Mz') mz = res.finalReactions[idx];
+          }
+        });
+
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-slate-800/60";
+        tr.innerHTML = `
+          <td class="p-2.5 font-sans font-medium text-slate-200">Apoyo ${supIdx + 1} (${sup.type.toUpperCase()})</td>
+          <td class="p-2.5 text-slate-400">${sup.x.toFixed(2)} m</td>
+          <td class="p-2.5 ${Math.abs(rx)>0.01?'text-amber-400 font-semibold':'text-slate-500'}">${rx.toFixed(2)}</td>
+          <td class="p-2.5 ${Math.abs(ry)>0.01?'text-emerald-400 font-semibold':'text-slate-500'}">${ry.toFixed(2)}</td>
+          <td class="p-2.5 ${Math.abs(mz)>0.01?'text-blue-400 font-semibold':'text-slate-500'}">${mz.toFixed(2)}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // --- CANVAS SCHEMATIC DRAWING ---
+    function drawBeamCanvas(res) {
+      const canvas = document.getElementById('beamCanvas');
+      const ctx = canvas.getContext('2d');
+
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width * window.devicePixelRatio || 800;
+      canvas.height = rect.height * window.devicePixelRatio || 200;
+      ctx.scale(window.devicePixelRatio || 1, window.devicePixelRatio || 1);
+
+      const W = rect.width;
+      const H = rect.height;
+
+      ctx.clearRect(0, 0, W, H);
+
+      const padX = 50;
+      const beamY = H / 2 + 10;
+      const scaleX = (W - 2 * padX) / beamLength;
+
+      ctx.strokeStyle = "#334155";
+      ctx.lineWidth = 1;
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath();
+      ctx.moveTo(padX, beamY);
+      ctx.lineTo(W - padX, beamY);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      ctx.fillStyle = "#3b82f6";
+      ctx.strokeStyle = "#60a5fa";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.roundRect(padX, beamY - 6, W - 2 * padX, 12, 3);
+      ctx.fill();
+      ctx.stroke();
+
+      const toPx = x => padX + x * scaleX;
+
+      supports.forEach((sup, idx) => {
+        const sx = toPx(sup.x);
+        ctx.lineWidth = 2;
+
+        if (sup.type === 'pin') {
+          ctx.fillStyle = "#10b981";
+          ctx.strokeStyle = "#34d399";
+          ctx.beginPath();
+          ctx.moveTo(sx, beamY + 6);
+          ctx.lineTo(sx - 10, beamY + 22);
+          ctx.lineTo(sx + 10, beamY + 22);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+
+          ctx.beginPath();
+          ctx.moveTo(sx - 14, beamY + 22);
+          ctx.lineTo(sx + 14, beamY + 22);
+          ctx.stroke();
+        } else if (sup.type === 'roller') {
+          ctx.fillStyle = "#f59e0b";
+          ctx.strokeStyle = "#fbbf24";
+          ctx.beginPath();
+          ctx.moveTo(sx, beamY + 6);
+          ctx.lineTo(sx - 9, beamY + 18);
+          ctx.lineTo(sx + 9, beamY + 18);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+
+          ctx.beginPath();
+          ctx.arc(sx - 5, beamY + 22, 3, 0, Math.PI * 2);
+          ctx.arc(sx + 5, beamY + 22, 3, 0, Math.PI * 2);
+          ctx.stroke();
+        } else if (sup.type === 'fixed') {
+          ctx.fillStyle = "#ef4444";
+          ctx.strokeStyle = "#f87171";
+          ctx.fillRect(sx - 5, beamY - 20, 10, 40);
+          ctx.strokeRect(sx - 5, beamY - 20, 10, 40);
+        }
+
+        ctx.fillStyle = "#94a3b8";
+        ctx.font = "10px monospace";
+        ctx.textAlign = "center";
+        ctx.fillText(`A${idx+1} (${sup.x}m)`, sx, beamY + 36);
+      });
+
+      pointLoads.forEach(pl => {
+        const lx = toPx(pl.x);
+
+        if (Math.abs(pl.Py) > 0) {
+          ctx.strokeStyle = "#f43f5e";
+          ctx.fillStyle = "#f43f5e";
+          ctx.lineWidth = 2.5;
+
+          ctx.beginPath();
+          ctx.moveTo(lx, beamY - 35);
+          ctx.lineTo(lx, beamY - 8);
+          ctx.stroke();
+
+          ctx.beginPath();
+          ctx.moveTo(lx - 5, beamY - 14);
+          ctx.lineTo(lx, beamY - 6);
+          ctx.lineTo(lx + 5, beamY - 14);
+          ctx.fill();
+
+          ctx.font = "11px sans-serif";
+          ctx.fillText(`${pl.Py} kN`, lx, beamY - 40);
+        }
+
+        if (Math.abs(pl.Px) > 0) {
+          ctx.strokeStyle = "#f59e0b";
+          ctx.fillStyle = "#f59e0b";
+          ctx.lineWidth = 2;
+
+          ctx.beginPath();
+          ctx.moveTo(lx - 25, beamY);
+          ctx.lineTo(lx - 8, beamY);
+          ctx.stroke();
+
+          ctx.beginPath();
+          ctx.moveTo(lx - 12, beamY - 4);
+          ctx.lineTo(lx - 6, beamY);
+          ctx.lineTo(lx - 12, beamY + 4);
+          ctx.fill();
+
+          ctx.fillText(`${pl.Px} kN (x)`, lx - 25, beamY - 10);
+        }
+      });
+
+      ctx.strokeStyle = "#475569";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(padX, beamY + 52);
+      ctx.lineTo(W - padX, beamY + 52);
+      ctx.stroke();
+
+      ctx.fillStyle = "#cbd5e1";
+      ctx.font = "11px monospace";
+      ctx.fillText(`Luz Total L = ${beamLength} m`, W / 2, beamY + 65);
+    }
+
+    // --- CHART.JS DIAGRAMS RENDER ---
+    function switchTab(tab) {
+      activeTab = tab;
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.getElementById(`tab-${tab}`).classList.add('active');
+      calculateAndRender();
+    }
+
+    function updateDiagramChart(res) {
+      const ctx = document.getElementById('diagramChart').getContext('2d');
+
+      let chartData = [];
+      let label = "";
+      let color = "#10b981";
+      let fillBg = "rgba(16, 185, 129, 0.15)";
+      let unit = "";
+
+      if (activeTab === 'moment') {
+        chartData = res.M;
+        label = "Momento Flector M(x)";
+        color = "#10b981";
+        fillBg = "rgba(16, 185, 129, 0.2)";
+        unit = "kN·m";
+      } else if (activeTab === 'shear') {
+        chartData = res.V;
+        label = "Esfuerzo Cortante V(x)";
+        color = "#3b82f6";
+        fillBg = "rgba(59, 130, 246, 0.2)";
+        unit = "kN";
+      } else if (activeTab === 'axial') {
+        chartData = res.N;
+        label = "Esfuerzo Axial N(x)";
+        color = "#f59e0b";
+        fillBg = "rgba(245, 158, 11, 0.2)";
+        unit = "kN";
+      } else if (activeTab === 'elastic') {
+        chartData = res.delta;
+        label = "Deflexión Elástica δ(x)";
+        color = "#a855f7";
+        fillBg = "rgba(168, 85, 247, 0.2)";
+        unit = "mm";
+      }
+
+      const labels = res.xVals.map(x => x.toFixed(2));
+
+      if (myChart) {
+        myChart.destroy();
+      }
+
+      myChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: `${label} [${unit}]`,
+            data: chartData,
+            borderColor: color,
+            borderWidth: 2,
+            backgroundColor: fillBg,
+            fill: true,
+            pointRadius: 0,
+            pointHoverRadius: 5,
+            tension: 0.1
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            x: {
+              title: { display: true, text: 'Posición x (m)', color: '#94a3b8', font: { size: 11 } },
+              grid: { color: 'rgba(51, 65, 85, 0.4)' },
+              ticks: { color: '#94a3b8', font: { size: 10 } }
+            },
+            y: {
+              title: { display: true, text: `Magnitud [${unit}]`, color: '#94a3b8', font: { size: 11 } },
+              grid: { color: 'rgba(51, 65, 85, 0.4)' },
+              ticks: { color: '#94a3b8', font: { size: 10 } }
+            }
+          },
+          plugins: {
+            legend: {
+              labels: { color: '#f8fafc', font: { size: 12, weight: 'bold' } }
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  return `${label}: ${context.raw.toFixed(3)} ${unit}`;
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    function generateAnalyticalEquations() {
+      if (!lastSolution) return;
+      const res = lastSolution;
+
+      // Collect key critical boundary points along x
+      let points = new Set([0, beamLength]);
+      supports.forEach(s => points.add(s.x));
+      pointLoads.forEach(p => points.add(p.x));
+      distLoads.forEach(d => { points.add(d.x1); points.add(d.x2); });
+
+      let sortedPts = Array.from(points).sort((a, b) => a - b);
+      let segments = [];
+      for (let i = 0; i < sortedPts.length - 1; i++) {
+        if (sortedPts[i+1] - sortedPts[i] > 1e-4) {
+          segments.push({ x1: sortedPts[i], x2: sortedPts[i+1] });
+        }
+      }
+
+      const container = document.getElementById('equationsModalContent');
+      container.innerHTML = '';
+
+      const EI = res.EI; // N·m^2
+      const profile = IPE_DATABASE[currentIpeKey];
+
+      segments.forEach((seg, sIdx) => {
+        const midX = (seg.x1 + seg.x2) / 2;
+        const idxMid = res.xVals.findIndex(x => x >= midX) || 0;
+
+        // Sample values at start and end of segment
+        const idx1 = res.xVals.findIndex(x => x >= seg.x1) || 0;
+        const idx2 = res.xVals.findIndex(x => x >= seg.x2) || (res.xVals.length - 1);
+
+        const V1 = res.V[idx1];
+        const M1 = res.M[idx1];
+        const N1 = res.N[idx1];
+
+        // Format LaTeX piecewise expressions for current segment
+        const segBox = document.createElement('div');
+        segBox.className = "p-4 bg-slate-900 rounded-xl border border-slate-700 space-y-3";
+
+        segBox.innerHTML = `
+          <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+            <span class="font-bold text-blue-400 text-sm">Tramo ${sIdx + 1}: $x \\in [${seg.x1.toFixed(2)}, \\, ${seg.x2.toFixed(2)}]\\text{ m}$</span>
+            <span class="text-slate-400 font-mono text-[11px]">Longitud: ${(seg.x2 - seg.x1).toFixed(2)} m</span>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+            <!-- Esfuerzo Axial N(x) -->
+            <div class="p-2.5 bg-slate-950 rounded-lg border border-slate-800/80">
+              <span class="text-amber-400 font-semibold block mb-1">Ecuación Axial $N(x)$:</span>
+              <div class="font-mono text-slate-200">
+                $$N(x) = ${N1 >= 0 ? '+' : ''}${N1.toFixed(2)} \\text{ kN}$$
+              </div>
+            </div>
+
+            <!-- Esfuerzo Cortante V(x) -->
+            <div class="p-2.5 bg-slate-950 rounded-lg border border-slate-800/80">
+              <span class="text-blue-400 font-semibold block mb-1">Ecuación Cortante $V(x)$:</span>
+              <div class="font-mono text-slate-200">
+                $$V(x) = ${V1 >= 0 ? '+' : ''}${V1.toFixed(2)} \\text{ kN}$$
+              </div>
+            </div>
+
+            <!-- Momento Flector M(x) -->
+            <div class="p-2.5 bg-slate-950 rounded-lg border border-slate-800/80 md:col-span-2">
+              <span class="text-emerald-400 font-semibold block mb-1">Ecuación Momento Flector $M(x)$:</span>
+              <div class="font-mono text-slate-200">
+                $$M(x) = ${M1.toFixed(2)} ${V1 >= 0 ? '+' : ''} ${V1.toFixed(2)} \\cdot (x - ${seg.x1.toFixed(2)}) \\text{ kN}\\cdot\\text{m}$$
+              </div>
+            </div>
+
+            <!-- Curva Elástica delta(x) -->
+            <div class="p-2.5 bg-slate-950 rounded-lg border border-slate-800/80 md:col-span-2">
+              <span class="text-purple-400 font-semibold block mb-1">Ecuación Diferencial y Curva Elástica $\\delta(x)$:</span>
+              <div class="font-mono text-slate-200 text-center space-y-1">
+                $$E I_x \\cdot \\frac{d^2 y}{dx^2} = -M(x) = -\\left[ ${M1.toFixed(2)} ${V1 >= 0 ? '+' : ''} ${V1.toFixed(2)} (x - ${seg.x1.toFixed(2)}) \\right]$$
+                $$\\delta(x) = \\frac{1000}{E I_x} \\left[ -\\frac{${M1.toFixed(2)}}{2} (x - ${seg.x1.toFixed(2)})^2 - \\frac{${V1.toFixed(2)}}{6} (x - ${seg.x1.toFixed(2)})^3 + C_1 x + C_2 \\right] \\text{ mm}$$
+              </div>
+            </div>
+          </div>
+        `;
+        container.appendChild(segBox);
+      });
+
+      triggerMathRender();
+    }
+
+    function toggleTheoryModal() {
+      const modal = document.getElementById('theoryModal');
+      modal.classList.toggle('hidden');
+      if (!modal.classList.contains('hidden')) {
+        triggerMathRender();
+      }
+    }
+
+    function toggleEquationsModal() {
+      const modal = document.getElementById('equationsModal');
+      modal.classList.toggle('hidden');
+      if (!modal.classList.contains('hidden')) {
+        generateAnalyticalEquations();
+      }
+    }
+  </script>
+</body>
+</html>
