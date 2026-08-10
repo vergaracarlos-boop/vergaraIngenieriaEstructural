@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Calculadora de Compresión Vigas y Columnas IPE (AISC 360-16)</title>
+  <title>Calculadora de Compresión de Columnas y Vigas de Acero (AISC 360-16)</title>
   
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -60,11 +60,11 @@
     <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center gap-4">
       <div class="flex items-center space-x-3">
         <div class="bg-brand-600 p-2.5 rounded-lg shadow-md flex items-center justify-center">
-          <i class="fa-solid me-1 fa-layer-group text-2xl text-white"></i>
+          <i class="fa-solid fa-building-columns text-2xl text-white"></i>
         </div>
         <div>
-          <h1 class="text-xl font-bold tracking-tight leading-tight">Calculadora de Compresión - Perfiles IPE</h1>
-          <p class="text-xs text-slate-300">Diseño Estructural de Acero según <span class="text-brand-300 font-semibold">ANSI/AISC 360-16 (LRFD & ASD)</span></p>
+          <h1 class="text-xl font-bold tracking-tight leading-tight">Calculadora de Compresión en Perfiles de Acero</h1>
+          <p class="text-xs text-slate-300">Perfiles IPE, HEA, HEB, HEM y Tubos HSS CINTAC segun <span class="text-brand-300 font-semibold">ANSI/AISC 360-16 (LRFD & ASD)</span></p>
         </div>
       </div>
 
@@ -91,38 +91,61 @@
         <span class="text-xs text-slate-500">Datos de diseño</span>
       </div>
 
-      <!-- 1. Perfil IPE -->
+      <!-- 1. Familia de Perfil -->
       <div class="space-y-1.5">
-        <label for="ipeSelect" class="block text-xs font-bold text-slate-700 uppercase tracking-wider">
-          Perfil IPE de Acero
+        <label for="familySelect" class="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+          Familia / Tipo de Perfil
+        </label>
+        <select id="familySelect" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-xs font-bold text-slate-800 focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition">
+          <optgroup label="Perfiles de Alas Anchas para Columnas (I/H)">
+            <option value="HEB" selected>HEB - Serie Normal (Óptimo Columnas)</option>
+            <option value="HEA">HEA - Serie Ligera (Columnas/Vigas)</option>
+            <option value="HEM">HEM - Serie Pesada (Columnas Gran Carga)</option>
+          </optgroup>
+          <optgroup label="Perfiles en I Estándar">
+            <option value="IPE">IPE - Vigas y Columnas de Alas Paralelas</option>
+            <option value="IPN">IPN - Perfiles I Tradicionales</option>
+          </optgroup>
+          <optgroup label="Tubos Estructurales HSS (Catálogo CINTAC)">
+            <option value="HSS_SQ">HSS Cuadrado ASTM A500 CINTAC</option>
+            <option value="HSS_REC">HSS Rectangular ASTM A500 CINTAC</option>
+          </optgroup>
+        </select>
+      </div>
+
+      <!-- 2. Perfil Específico -->
+      <div class="space-y-1.5">
+        <label for="profileSelect" class="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+          Perfil Específico
         </label>
         <div class="relative">
-          <select id="ipeSelect" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-sm font-semibold text-slate-800 focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition">
-            <!-- Dynamic options -->
+          <select id="profileSelect" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-sm font-semibold text-slate-800 focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition">
+            <!-- Dynamic options populated by JS -->
           </select>
         </div>
       </div>
 
-      <!-- 2. Calidad de Acero -->
+      <!-- 3. Calidad de Acero -->
       <div class="space-y-1.5">
         <label for="steelSelect" class="block text-xs font-bold text-slate-700 uppercase tracking-wider">
-          Calidad del Acero ($F_y$)
+          Calidad del Acero
         </label>
-        <select id="steelSelect" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-sm font-semibold text-slate-800 focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition">
-          <option value="235">S235 / A36 mod. (Fy = 235 MPa)</option>
-          <option value="250" selected>A36 estándar (Fy = 250 MPa / 2550 kgf/cm²)</option>
+        <select id="steelSelect" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition">
+          <option value="235">S235 (Fy = 235 MPa)</option>
+          <option value="250">A36 estándar (Fy = 250 MPa / 2550 kgf/cm²)</option>
           <option value="275">S275 (Fy = 275 MPa)</option>
+          <option value="317" selected>ASTM A500 Gr B (Fy = 317 MPa / 46 ksi - Tubos HSS)</option>
           <option value="345">A572 Gr 50 / A992 / S355 (Fy = 345 MPa / 3500 kgf/cm²)</option>
           <option value="355">S355 norma europea (Fy = 355 MPa)</option>
           <option value="custom">Personalizado...</option>
         </select>
         <div id="customFyContainer" class="hidden mt-2">
-          <label class="block text-xs text-slate-600 mb-1">Límite elástico personalizado $F_y$ (MPa):</label>
+          <label class="block text-xs text-slate-600 mb-1">Límite elástico personalizado <span id="lblCustomFy"></span> (MPa):</label>
           <input type="number" id="customFyInput" value="250" min="100" max="1000" step="5" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-sm">
         </div>
       </div>
 
-      <!-- 3. Longitud no arriostrada L -->
+      <!-- 4. Longitud no arriostrada L -->
       <div class="space-y-3 bg-slate-50 p-3.5 rounded-lg border border-slate-200">
         <div class="flex items-center justify-between">
           <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Longitudes no Arriostradas</label>
@@ -134,7 +157,7 @@
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label for="lengthLy" class="block text-xs font-semibold text-slate-600 mb-1">
-              $L_y$ (Eje débil Y-Y)
+              <span id="lblLy"></span> (Eje débil Y-Y)
             </label>
             <div class="relative">
               <input type="number" id="lengthLy" value="3.00" min="0.1" max="25" step="0.1" class="w-full bg-white border border-slate-300 rounded-lg p-2 pr-8 text-sm font-bold text-slate-800 focus:ring-2 focus:ring-brand-500">
@@ -143,7 +166,7 @@
           </div>
           <div>
             <label for="lengthLx" class="block text-xs font-semibold text-slate-600 mb-1">
-              $L_x$ (Eje fuerte X-X)
+              <span id="lblLx"></span> (Eje fuerte X-X)
             </label>
             <div class="relative">
               <input type="number" id="lengthLx" value="3.00" min="0.1" max="25" step="0.1" class="w-full bg-white border border-slate-300 rounded-lg p-2 pr-8 text-sm font-bold text-slate-800 focus:ring-2 focus:ring-brand-500">
@@ -153,9 +176,9 @@
         </div>
       </div>
 
-      <!-- 4. Factores K -->
+      <!-- 5. Factores K -->
       <div class="space-y-3 bg-slate-50 p-3.5 rounded-lg border border-slate-200">
-        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Factores de Longitud Efectiva ($K$)</label>
+        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Factores de Longitud Efectiva (<span id="lblK"></span>)</label>
         
         <!-- Presets para K -->
         <div class="grid grid-cols-2 gap-1.5">
@@ -175,17 +198,17 @@
 
         <div class="grid grid-cols-2 gap-3 pt-1">
           <div>
-            <label for="factorKy" class="block text-xs font-semibold text-slate-600 mb-1">$K_y$ (Eje Y-Y)</label>
+            <label for="factorKy" class="block text-xs font-semibold text-slate-600 mb-1"><span id="lblKy"></span> (Eje Y-Y)</label>
             <input type="number" id="factorKy" value="1.00" min="0.1" max="5.0" step="0.05" class="w-full bg-white border border-slate-300 rounded-lg p-2 text-sm font-bold text-slate-800 focus:ring-2 focus:ring-brand-500">
           </div>
           <div>
-            <label for="factorKx" class="block text-xs font-semibold text-slate-600 mb-1">$K_x$ (Eje X-X)</label>
+            <label for="factorKx" class="block text-xs font-semibold text-slate-600 mb-1"><span id="lblKx"></span> (Eje X-X)</label>
             <input type="number" id="factorKx" value="1.00" min="0.1" max="5.0" step="0.05" class="w-full bg-white border border-slate-300 rounded-lg p-2 text-sm font-bold text-slate-800 focus:ring-2 focus:ring-brand-500">
           </div>
         </div>
       </div>
 
-      <!-- 5. Carga de Compresión Requerida (Opción D/C) -->
+      <!-- 6. Carga de Compresión Requerida (Opción D/C) -->
       <div class="space-y-2 bg-brand-50/50 p-3.5 rounded-lg border border-brand-200">
         <label for="appliedLoad" class="block text-xs font-bold text-brand-900 uppercase tracking-wider flex items-center justify-between">
           <span>Carga Requerida Solicitante</span>
@@ -222,7 +245,7 @@
         <!-- LRFD Capacity -->
         <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 relative overflow-hidden card-box">
           <div class="absolute top-0 right-0 w-2 h-full bg-emerald-500"></div>
-          <span class="text-[11px] font-bold tracking-wider text-slate-500 uppercase block mb-1">Capacidad LRFD ($\phi_c P_n$)</span>
+          <span class="text-[11px] font-bold tracking-wider text-slate-500 uppercase block mb-1">Capacidad LRFD (<span id="cardLrfdTitle"></span>)</span>
           <div class="flex items-baseline gap-1.5">
             <span id="lrfdCapKn" class="text-2xl font-black text-slate-900">0.0</span>
             <span class="text-xs font-bold text-slate-500">kN</span>
@@ -230,14 +253,14 @@
           <div class="text-[11px] text-slate-500 mt-1 font-medium flex items-center gap-2">
             <span><strong id="lrfdCapTon">0.0</strong> tonf</span>
             <span>•</span>
-            <span>$\phi_c = 0.90$</span>
+            <span><span id="cardPhi"></span></span>
           </div>
         </div>
 
         <!-- ASD Capacity -->
         <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 relative overflow-hidden card-box">
           <div class="absolute top-0 right-0 w-2 h-full bg-blue-500"></div>
-          <span class="text-[11px] font-bold tracking-wider text-slate-500 uppercase block mb-1">Capacidad ASD ($P_n / \Omega_c$)</span>
+          <span class="text-[11px] font-bold tracking-wider text-slate-500 uppercase block mb-1">Capacidad ASD (<span id="cardAsdTitle"></span>)</span>
           <div class="flex items-baseline gap-1.5">
             <span id="asdCapKn" class="text-2xl font-black text-slate-900">0.0</span>
             <span class="text-xs font-bold text-slate-500">kN</span>
@@ -245,20 +268,20 @@
           <div class="text-[11px] text-slate-500 mt-1 font-medium flex items-center gap-2">
             <span><strong id="asdCapTon">0.0</strong> tonf</span>
             <span>•</span>
-            <span>$\Omega_c = 1.67$</span>
+            <span><span id="cardOmega"></span></span>
           </div>
         </div>
 
         <!-- Governing Slenderness -->
         <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 relative overflow-hidden card-box">
           <div id="slendernessIndicator" class="absolute top-0 right-0 w-2 h-full bg-amber-500"></div>
-          <span class="text-[11px] font-bold tracking-wider text-slate-500 uppercase block mb-1">Esbeltez Máxima ($KL/r$)</span>
+          <span class="text-[11px] font-bold tracking-wider text-slate-500 uppercase block mb-1">Esbeltez Máxima (<span id="cardKlrTitle"></span>)</span>
           <div class="flex items-baseline gap-1.5">
             <span id="maxKlr" class="text-2xl font-black text-slate-900">0.0</span>
             <span id="governingAxisBadge" class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-800">Eje Y</span>
           </div>
           <div id="slendernessStatusText" class="text-[11px] text-slate-500 mt-1 font-medium truncate">
-            Límite AISC $\le 200$
+            Límite AISC ≤ 200
           </div>
         </div>
 
@@ -311,7 +334,7 @@
                 <p class="text-xs text-slate-500">Evaluación del estado límite de pandeo por flexión e inestabilidad local</p>
               </div>
               <span id="selectedIpeBadge" class="bg-brand-50 text-brand-700 font-extrabold text-xs px-3 py-1 rounded-full border border-brand-200">
-                Perfil: IPE 300
+                Perfil: HEB 200
               </span>
             </div>
 
@@ -321,15 +344,8 @@
                 <span class="w-5 h-5 bg-slate-800 text-white rounded-full flex items-center justify-center text-[10px]">1</span>
                 Propiedades Mecánicas e Inerciales del Perfil
               </h4>
-              <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-slate-50 p-3 rounded-lg text-xs border border-slate-200">
-                <div><span class="text-slate-500 block">Área ($A_g$):</span> <strong id="propA" class="text-slate-800">53.81 cm²</strong></div>
-                <div><span class="text-slate-500 block">Altura ($h$):</span> <strong id="propH" class="text-slate-800">300 mm</strong></div>
-                <div><span class="text-slate-500 block">Ancho Ala ($b_f$):</span> <strong id="propB" class="text-slate-800">150 mm</strong></div>
-                <div><span class="text-slate-500 block">Espesor Ala ($t_f$):</span> <strong id="propTf" class="text-slate-800">10.7 mm</strong></div>
-                <div><span class="text-slate-500 block">Espesor Alma ($t_w$):</span> <strong id="propTw" class="text-slate-800">7.1 mm</strong></div>
-                <div><span class="text-slate-500 block">Radio de Giro ($r_x$):</span> <strong id="propRx" class="text-slate-800">12.46 cm</strong></div>
-                <div><span class="text-slate-500 block">Radio de Giro ($r_y$):</span> <strong id="propRy" class="text-slate-800">3.35 cm</strong></div>
-                <div><span class="text-slate-500 block">Módulo $E$:</span> <strong class="text-slate-800">200,000 MPa</strong></div>
+              <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-slate-50 p-3 rounded-lg text-xs border border-slate-200" id="step1PropGrid">
+                <!-- Injected via JS -->
               </div>
             </div>
 
@@ -339,39 +355,11 @@
                 <span class="w-5 h-5 bg-slate-800 text-white rounded-full flex items-center justify-center text-[10px]">2</span>
                 Clasificación de Elementos a Compresión (Pandeo Local - AISC B4.1a)
               </h4>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
-                <!-- Ala -->
-                <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 space-y-1">
-                  <div class="font-bold text-slate-800 flex justify-between">
-                    <span>Ala (Elemento No Rigidizado)</span>
-                    <span id="flangeSlenderBadge" class="text-[10px] px-2 py-0.5 rounded font-semibold bg-emerald-100 text-emerald-800">NO ESBELTA</span>
-                  </div>
-                  <p class="text-slate-600">
-                    $\lambda_f = \frac{b_f}{2 t_f} = $ <strong id="calcLambdaF">7.01</strong>
-                  </p>
-                  <p class="text-slate-600">
-                    $\lambda_{r,f} = 0.56 \sqrt{\frac{E}{F_y}} = $ <strong id="calcLambdaRf">15.84</strong>
-                  </p>
-                  <p id="flangeStatusDesc" class="text-[11px] text-slate-500 italic">Como $\lambda_f \le \lambda_{r,f}$, el ala no es esbelta ($Q_s = 1.0$).</p>
-                </div>
-
-                <!-- Alma -->
-                <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 space-y-1">
-                  <div class="font-bold text-slate-800 flex justify-between">
-                    <span>Alma (Elemento Rigidizado)</span>
-                    <span id="webSlenderBadge" class="text-[10px] px-2 py-0.5 rounded font-semibold bg-emerald-100 text-emerald-800">NO ESBELTA</span>
-                  </div>
-                  <p class="text-slate-600">
-                    $\lambda_w = \frac{h - 2k}{t_w} = $ <strong id="calcLambdaW">34.93</strong>
-                  </p>
-                  <p class="text-slate-600">
-                    $\lambda_{r,w} = 1.49 \sqrt{\frac{E}{F_y}} = $ <strong id="calcLambdaRw">42.14</strong>
-                  </p>
-                  <p id="webStatusDesc" class="text-[11px] text-slate-500 italic">Como $\lambda_w \le \lambda_{r,w}$, el alma no es esbelta ($Q_a = 1.0$).</p>
-                </div>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs" id="step2SlendernessContainer">
+                <!-- Injected via JS -->
               </div>
               <div class="p-2.5 bg-slate-100 rounded-lg text-xs flex justify-between items-center font-medium">
-                <span>Factor Neto de Reducción por Pandeo Local ($Q = Q_s \cdot Q_a$):</span>
+                <span>Factor Neto de Reducción por Pandeo Local (<span id="lblNetQFormula"></span>):</span>
                 <strong id="calcNetQ" class="text-brand-700 font-bold text-sm">1.000</strong>
               </div>
             </div>
@@ -398,25 +386,24 @@
             <div class="space-y-2">
               <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2">
                 <span class="w-5 h-5 bg-slate-800 text-white rounded-full flex items-center justify-center text-[10px]">4</span>
-                Tensión Crítica de Pandeo Elasticidad y Resistencia ($F_e$ & $F_{cr}$)
+                Tensión Crítica de Pandeo Elasticidad y Resistencia (<span id="lblFeFcr"></span>)
               </h4>
               <div class="bg-slate-50 p-3.5 rounded-lg border border-slate-200 space-y-2 text-xs">
                 <div>
-                  <strong class="text-slate-700 block mb-1">Tensión de Pandeo Elástico de Euler ($F_e$):</strong>
+                  <strong class="text-slate-700 block mb-1">Tensión de Pandeo Elástico de Euler (<span id="lblFeTitle"></span>):</strong>
                   <div id="feFormulaContainer" class="text-slate-800 my-1 overflow-x-auto"></div>
                 </div>
                 <div class="border-t border-slate-200 pt-2 text-slate-700">
                   <strong class="block mb-1">Límite de Pandeo Inelástico vs. Elástico:</strong>
-                  <div class="flex items-center gap-2 my-1">
-                    <span>$4.71 \sqrt{\frac{E}{Q \cdot F_y}} =$</span>
-                    <span id="limitFormulaContainer" class="font-bold"></span>
+                  <div class="flex items-center gap-2 my-1 overflow-x-auto">
+                    <div id="limitFormulaContainer" class="font-bold"></div>
                   </div>
                   <p id="bucklingTypeDesc" class="font-semibold text-brand-700 bg-brand-50 p-2 rounded mt-1 border border-brand-200">
                     Evaluando pandeo...
                   </p>
                 </div>
                 <div class="border-t border-slate-200 pt-2">
-                  <strong class="text-slate-800 block mb-1">Tensión Crítica Nominal ($F_{cr}$):</strong>
+                  <strong class="text-slate-800 block mb-1">Tensión Crítica Nominal (<span id="lblFcrTitle"></span>):</strong>
                   <div id="fcrFormulaContainer" class="text-slate-800 my-1 overflow-x-auto"></div>
                 </div>
               </div>
@@ -426,26 +413,26 @@
             <div class="space-y-2">
               <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2">
                 <span class="w-5 h-5 bg-slate-800 text-white rounded-full flex items-center justify-center text-[10px]">5</span>
-                Resistencia Nominal y Capacidad Disponible ($P_n$, LRFD y ASD)
+                Resistencia Nominal y Capacidad Disponible (<span id="lblPnTitle"></span>)
               </h4>
               <div class="bg-gradient-to-br from-slate-900 to-slate-800 text-white p-4 rounded-xl shadow border border-slate-700 space-y-3 text-xs">
                 <div class="flex justify-between items-center border-b border-slate-700 pb-2">
-                  <span class="text-slate-300">Resistencia Nominal a Compresión ($P_n = F_{cr} \cdot A_g$):</span>
-                  <span id="calcPnResult" class="text-base font-extrabold text-amber-400">878.4 kN (89.57 tonf)</span>
+                  <span class="text-slate-300">Resistencia Nominal a Compresión (<span id="lblPnFormula"></span>):</span>
+                  <span id="calcPnResult" class="text-base font-extrabold text-amber-400">0.0 kN</span>
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
                   <div class="bg-slate-800/80 p-3 rounded-lg border border-slate-700">
-                    <span class="text-emerald-400 font-bold block mb-1">MÉTODO LRFD ($\phi_c = 0.90$)</span>
+                    <span class="text-emerald-400 font-bold block mb-1">MÉSTATIC LRFD (<span id="lblPhiVal"></span>)</span>
                     <div id="lrfdFormulaContainer" class="text-slate-300 my-1 overflow-x-auto"></div>
-                    <p class="text-xl font-black text-white mt-1" id="lrfdFinalResult">790.6 kN</p>
-                    <span class="text-[11px] text-slate-400 font-medium" id="lrfdFinalTon">80.62 tonf / 80,620 kgf</span>
+                    <p class="text-xl font-black text-white mt-1" id="lrfdFinalResult">0.0 kN</p>
+                    <span class="text-[11px] text-slate-400 font-medium" id="lrfdFinalTon">0.0 tonf</span>
                   </div>
 
                   <div class="bg-slate-800/80 p-3 rounded-lg border border-slate-700">
-                    <span class="text-blue-400 font-bold block mb-1">MÉTODO ASD ($\Omega_c = 1.67$)</span>
+                    <span class="text-blue-400 font-bold block mb-1">MÉTODO ASD (<span id="lblOmegaVal"></span>)</span>
                     <div id="asdFormulaContainer" class="text-slate-300 my-1 overflow-x-auto"></div>
-                    <p class="text-xl font-black text-white mt-1" id="asdFinalResult">526.0 kN</p>
-                    <span class="text-[11px] text-slate-400 font-medium" id="asdFinalTon">53.64 tonf / 53,640 kgf</span>
+                    <p class="text-xl font-black text-white mt-1" id="asdFinalResult">0.0 kN</p>
+                    <span class="text-[11px] text-slate-400 font-medium" id="asdFinalTon">0.0 tonf</span>
                   </div>
                 </div>
               </div>
@@ -458,14 +445,14 @@
             <div class="flex justify-between items-center border-b border-slate-200 pb-3">
               <div>
                 <h3 class="font-bold text-slate-800 text-base">Curva de Capacidad a Compresión vs. Longitud no Arriostrada</h3>
-                <p class="text-xs text-slate-500">Comportamiento del perfil IPE ante la variación del pandeo flexional ($L = 0.5\text{m}$ a $12\text{m}$)</p>
+                <p class="text-xs text-slate-500">Comportamiento del perfil ante la variación del pandeo flexional ($L = 0.5\text{m}$ a $10\text{m}$)</p>
               </div>
               <div class="flex items-center gap-2">
                 <span class="inline-flex items-center gap-1 text-xs text-emerald-700 font-bold">
-                  <span class="w-3 h-3 bg-emerald-500 rounded-full inline-block"></span> LRFD ($\phi_c P_n$)
+                  <span class="w-3 h-3 bg-emerald-500 rounded-full inline-block"></span> LRFD
                 </span>
                 <span class="inline-flex items-center gap-1 text-xs text-blue-700 font-bold ml-2">
-                  <span class="w-3 h-3 bg-blue-500 rounded-full inline-block"></span> ASD ($P_n/\Omega$)
+                  <span class="w-3 h-3 bg-blue-500 rounded-full inline-block"></span> ASD
                 </span>
               </div>
             </div>
@@ -483,7 +470,7 @@
           <div id="sectionTab" class="tab-content hidden space-y-6">
             <div class="border-b border-slate-200 pb-3">
               <h3 class="font-bold text-slate-800 text-base">Geometría y Propiedades Seccionales</h3>
-              <p class="text-xs text-slate-500">Dimensiones según estándar europeo EN 10025-2 / EURONORM 19-57</p>
+              <p class="text-xs text-slate-500">Dimensiones según estándar comercial (Euronorma EN 10025 / Catálogo CINTAC)</p>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
@@ -492,7 +479,7 @@
                 <div id="svgContainer" class="w-full flex justify-center">
                   <!-- SVG injected dynamically -->
                 </div>
-                <span class="text-[11px] font-semibold text-slate-500 mt-2">Esquema Acotado Perfil IPE</span>
+                <span class="text-[11px] font-semibold text-slate-500 mt-2">Esquema Acotado del Perfil</span>
               </div>
 
               <!-- Full Table of Properties -->
@@ -531,29 +518,150 @@
     </div>
   </footer>
 
-  <!-- JAVASCRIPT LOGIC -->
   <script>
-    // COMPLETE IPE DATABASE (Standard European IPE Beams)
-    // Dimensions in mm, Area in cm2, Inertia in cm4, Radii in cm, Moduli in cm3, J in cm4, Cw in cm6
-    const IPE_DATA = {
-      "IPE 80":  { h: 80,  b: 46,  tw: 3.8, tf: 5.2, r: 5,  A: 7.64,  Ix: 80.14, Iy: 8.49,  rx: 3.24, ry: 1.05, Sx: 20.0,  Sy: 3.69, Zx: 23.2,  Zy: 5.82,  J: 0.70,  Cw: 120,    weight: 6.0 },
-      "IPE 100": { h: 100, b: 55,  tw: 4.1, tf: 5.7, r: 7,  A: 10.32, Ix: 171.0, Iy: 15.92, rx: 4.07, ry: 1.24, Sx: 34.2,  Sy: 5.79, Zx: 39.4,  Zy: 8.88,  J: 1.20,  Cw: 352,    weight: 8.1 },
-      "IPE 120": { h: 120, b: 64,  tw: 4.4, tf: 6.3, r: 7,  A: 13.21, Ix: 317.8, Iy: 27.67, rx: 4.90, ry: 1.45, Sx: 53.0,  Sy: 8.65, Zx: 60.7,  Zy: 13.58, J: 1.74,  Cw: 890,    weight: 10.4 },
-      "IPE 140": { h: 140, b: 73,  tw: 4.7, tf: 6.9, r: 7,  A: 16.43, Ix: 541.2, Iy: 44.92, rx: 5.74, ry: 1.65, Sx: 77.3,  Sy: 12.31, Zx: 88.3, Zy: 19.25, J: 2.45,  Cw: 1980,   weight: 12.9 },
-      "IPE 160": { h: 160, b: 82,  tw: 5.0, tf: 7.4, r: 9,  A: 20.09, Ix: 869.3, Iy: 68.31, rx: 6.58, ry: 1.84, Sx: 108.7, Sy: 16.7, Zx: 123.8, Zy: 26.1,  J: 3.60,  Cw: 3960,   weight: 15.8 },
-      "IPE 180": { h: 180, b: 91,  tw: 5.3, tf: 8.0, r: 9,  A: 23.95, Ix: 1317,  Iy: 100.9, rx: 7.42, ry: 2.05, Sx: 146.3, Sy: 22.2, Zx: 166.4, Zy: 34.6,  J: 4.79,  Cw: 7430,   weight: 18.8 },
-      "IPE 200": { h: 200, b: 100, tw: 5.6, tf: 8.5, r: 12, A: 28.48, Ix: 1943,  Iy: 142.4, rx: 8.26, ry: 2.24, Sx: 194.3, Sy: 28.5, Zx: 220.6, Zy: 44.6,  J: 6.98,  Cw: 12990,  weight: 22.4 },
-      "IPE 220": { h: 220, b: 110, tw: 5.9, tf: 9.2, r: 12, A: 33.37, Ix: 2772,  Iy: 204.8, rx: 9.11, ry: 2.48, Sx: 252.0, Sy: 37.3, Zx: 285.4, Zy: 58.1,  J: 9.07,  Cw: 22670,  weight: 26.2 },
-      "IPE 240": { h: 240, b: 120, tw: 6.2, tf: 9.8, r: 15, A: 39.12, Ix: 3892,  Iy: 283.6, rx: 9.97, ry: 2.69, Sx: 324.3, Sy: 47.3, Zx: 366.6, Zy: 73.9,  J: 12.88, Cw: 37390,  weight: 30.7 },
-      "IPE 270": { h: 270, b: 135, tw: 6.6, tf: 10.2,r: 15, A: 45.95, Ix: 6010,  Iy: 419.8, rx: 11.44,ry: 3.02, Sx: 445.2, Sy: 62.2, Zx: 484.0, Zy: 96.9,  J: 15.94, Cw: 70640,  weight: 36.1 },
-      "IPE 300": { h: 300, b: 150, tw: 7.1, tf: 10.7,r: 15, A: 53.81, Ix: 8356,  Iy: 603.8, rx: 12.46,ry: 3.35, Sx: 557.1, Sy: 80.5, Zx: 628.4, Zy: 125.2, J: 20.12, Cw: 125900, weight: 42.2 },
-      "IPE 330": { h: 330, b: 160, tw: 7.5, tf: 11.5,r: 18, A: 62.61, Ix: 11770, Iy: 788.1, rx: 13.71,ry: 3.55, Sx: 713.3, Sy: 98.5, Zx: 804.3, Zy: 153.7, J: 28.15, Cw: 199100, weight: 49.1 },
-      "IPE 360": { h: 360, b: 170, tw: 8.0, tf: 12.7,r: 18, A: 72.73, Ix: 16270, Iy: 1043,  rx: 14.95,ry: 3.79, Sx: 903.9, Sy: 122.7,Zx: 1019,  Zy: 191.1, J: 37.35, Cw: 313600, weight: 57.1 },
-      "IPE 400": { h: 400, b: 180, tw: 8.6, tf: 13.5,r: 21, A: 84.46, Ix: 23130, Iy: 1318,  rx: 16.55,ry: 3.95, Sx: 1156,  Sy: 146.4,Zx: 1307,  Zy: 229.0, J: 51.08, Cw: 490000, weight: 66.3 },
-      "IPE 450": { h: 450, b: 190, tw: 9.4, tf: 14.6,r: 21, A: 98.82, Ix: 33740, Iy: 1676,  rx: 18.48,ry: 4.12, Sx: 1500,  Sy: 176.4,Zx: 1702,  Zy: 276.4, J: 66.87, Cw: 791000, weight: 77.6 },
-      "IPE 500": { h: 500, b: 200, tw: 10.2,tf: 16.0,r: 21, A: 115.5, Ix: 48200, Iy: 2142,  rx: 20.43,ry: 4.31, Sx: 1928,  Sy: 214.2,Zx: 2194,  Zy: 335.9, J: 89.29, Cw: 1249000,weight: 90.7 },
-      "IPE 550": { h: 550, b: 210, tw: 11.1,tf: 17.2,r: 24, A: 134.4, Ix: 67120, Iy: 2668,  rx: 22.34,ry: 4.45, Sx: 2441,  Sy: 254.1,Zx: 2787,  Zy: 400.5, J: 123.1, Cw: 1910000,weight: 106.0 },
-      "IPE 600": { h: 600, b: 220, tw: 12.0,tf: 19.0,r: 24, A: 156.4, Ix: 92080, Iy: 3387,  rx: 24.28,ry: 4.65, Sx: 3069,  Sy: 307.9,Zx: 3512,  Zy: 485.6, J: 165.4, Cw: 2846000,weight: 122.0 }
+    // COMPLETE DATABASE: IPE, HEA, HEB, HEM, IPN & CINTAC HSS (Square/Rectangular)
+    // Units: h, b, tw, tf, t in mm. Area in cm2, Inertia in cm4, Radii rx, ry in cm, Moduli in cm3, Weight in kg/m
+    const STEEL_DATABASE = {
+      "HEB": {
+        type: "I_SHAPE",
+        name: "HEB (Alas Anchas Serie Normal - Óptimo Columnas)",
+        items: {
+          "HEB 100": { h: 100, b: 100, tw: 6.0, tf: 10.0, r: 12, A: 26.0, Ix: 450.0, Iy: 167.0, rx: 4.16, ry: 2.53, Sx: 89.9, Sy: 33.5, Zx: 104.2, Zy: 51.4, weight: 20.4 },
+          "HEB 120": { h: 120, b: 120, tw: 6.5, tf: 11.0, r: 12, A: 34.0, Ix: 864.0, Iy: 318.0, rx: 5.04, ry: 3.06, Sx: 144.0, Sy: 52.9, Zx: 165.2, Zy: 80.8, weight: 26.7 },
+          "HEB 140": { h: 140, b: 140, tw: 7.0, tf: 12.0, r: 12, A: 43.0, Ix: 1510.0, Iy: 550.0, rx: 5.93, ry: 3.58, Sx: 216.0, Sy: 78.5, Zx: 245.4, Zy: 119.8, weight: 33.7 },
+          "HEB 160": { h: 160, b: 160, tw: 8.0, tf: 13.0, r: 15, A: 54.3, Ix: 2490.0, Iy: 889.0, rx: 6.78, ry: 4.05, Sx: 311.0, Sy: 111.0, Zx: 354.0, Zy: 170.0, weight: 42.6 },
+          "HEB 180": { h: 180, b: 180, tw: 8.5, tf: 14.0, r: 15, A: 65.3, Ix: 3830.0, Iy: 1360.0, rx: 7.66, ry: 4.57, Sx: 426.0, Sy: 151.0, Zx: 481.0, Zy: 231.0, weight: 51.2 },
+          "HEB 200": { h: 200, b: 200, tw: 9.0, tf: 15.0, r: 18, A: 78.1, Ix: 5700.0, Iy: 2000.0, rx: 8.54, ry: 5.07, Sx: 570.0, Sy: 200.0, Zx: 643.0, Zy: 306.0, weight: 61.3 },
+          "HEB 220": { h: 220, b: 220, tw: 9.5, tf: 16.0, r: 18, A: 91.0, Ix: 8090.0, Iy: 2840.0, rx: 9.43, ry: 5.59, Sx: 736.0, Sy: 258.0, Zx: 827.0, Zy: 394.0, weight: 71.5 },
+          "HEB 240": { h: 240, b: 240, tw: 10.0, tf: 17.0, r: 21, A: 106.0, Ix: 11260.0, Iy: 3920.0, rx: 10.30, ry: 6.08, Sx: 938.0, Sy: 327.0, Zx: 1053.0, Zy: 498.0, weight: 83.2 },
+          "HEB 260": { h: 260, b: 260, tw: 10.0, tf: 17.5, r: 24, A: 118.0, Ix: 14920.0, Iy: 5130.0, rx: 11.20, ry: 6.58, Sx: 1150.0, Sy: 395.0, Zx: 1283.0, Zy: 602.0, weight: 93.0 },
+          "HEB 280": { h: 280, b: 280, tw: 10.5, tf: 18.0, r: 24, A: 131.0, Ix: 19270.0, Iy: 6590.0, rx: 12.10, ry: 7.09, Sx: 1380.0, Sy: 471.0, Zx: 1534.0, Zy: 717.0, weight: 103.0 },
+          "HEB 300": { h: 300, b: 300, tw: 11.0, tf: 19.0, r: 27, A: 149.0, Ix: 25170.0, Iy: 8560.0, rx: 13.00, ry: 7.58, Sx: 1680.0, Sy: 571.0, Zx: 1869.0, Zy: 870.0, weight: 117.0 },
+          "HEB 320": { h: 320, b: 300, tw: 11.5, tf: 20.5, r: 27, A: 161.0, Ix: 29820.0, Iy: 9240.0, rx: 13.60, ry: 7.57, Sx: 1860.0, Sy: 616.0, Zx: 2080.0, Zy: 939.0, weight: 127.0 },
+          "HEB 340": { h: 340, b: 300, tw: 12.0, tf: 21.5, r: 27, A: 171.0, Ix: 34820.0, Iy: 9690.0, rx: 14.30, ry: 7.53, Sx: 2050.0, Sy: 646.0, Zx: 2310.0, Zy: 986.0, weight: 134.0 },
+          "HEB 360": { h: 360, b: 300, tw: 12.5, tf: 22.5, r: 27, A: 181.0, Ix: 40380.0, Iy: 10140.0, rx: 14.90, ry: 7.49, Sx: 2240.0, Sy: 676.0, Zx: 2560.0, Zy: 1032.0, weight: 142.0 },
+          "HEB 400": { h: 400, b: 300, tw: 13.5, tf: 24.0, r: 27, A: 198.0, Ix: 54720.0, Iy: 10820.0, rx: 16.60, ry: 7.40, Sx: 2740.0, Sy: 721.0, Zx: 3160.0, Zy: 1104.0, weight: 155.0 },
+          "HEB 450": { h: 450, b: 300, tw: 14.0, tf: 26.0, r: 27, A: 218.0, Ix: 79890.0, Iy: 11720.0, rx: 19.10, ry: 7.33, Sx: 3550.0, Sy: 781.0, Zx: 4120.0, Zy: 1198.0, weight: 171.0 },
+          "HEB 500": { h: 500, b: 300, tw: 14.5, tf: 28.0, r: 27, A: 239.0, Ix: 107200.0, Iy: 12620.0, rx: 21.20, ry: 7.27, Sx: 4290.0, Sy: 842.0, Zx: 5010.0, Zy: 1292.0, weight: 187.0 }
+        }
+      },
+      "HEA": {
+        type: "I_SHAPE",
+        name: "HEA (Alas Anchas Serie Ligera)",
+        items: {
+          "HEA 100": { h: 96,  b: 100, tw: 5.0, tf: 8.0,  r: 12, A: 21.2, Ix: 349.0, Iy: 134.0, rx: 4.06, ry: 2.51, Sx: 72.8, Sy: 26.8, Zx: 83.0, Zy: 41.1, weight: 16.7 },
+          "HEA 120": { h: 114, b: 120, tw: 5.0, tf: 8.0,  r: 12, A: 25.3, Ix: 606.0, Iy: 231.0, rx: 4.89, ry: 3.02, Sx: 106.0, Sy: 38.5, Zx: 119.5, Zy: 58.8, weight: 19.9 },
+          "HEA 140": { h: 133, b: 140, tw: 5.5, tf: 8.5,  r: 12, A: 31.4, Ix: 1030.0, Iy: 389.0, rx: 5.73, ry: 3.52, Sx: 155.0, Sy: 55.6, Zx: 173.5, Zy: 84.8, weight: 24.7 },
+          "HEA 160": { h: 152, b: 160, tw: 6.0, tf: 9.0,  r: 15, A: 38.8, Ix: 1670.0, Iy: 615.0, rx: 6.57, ry: 3.98, Sx: 220.0, Sy: 76.9, Zx: 245.0, Zy: 117.0, weight: 30.4 },
+          "HEA 180": { h: 171, b: 180, tw: 6.0, tf: 9.5,  r: 15, A: 45.3, Ix: 2510.0, Iy: 925.0, rx: 7.45, ry: 4.52, Sx: 294.0, Sy: 103.0, Zx: 325.0, Zy: 156.0, weight: 35.5 },
+          "HEA 200": { h: 190, b: 200, tw: 6.5, tf: 10.0, r: 18, A: 53.8, Ix: 3690.0, Iy: 1340.0, rx: 8.28, ry: 4.98, Sx: 389.0, Sy: 134.0, Zx: 429.0, Zy: 204.0, weight: 42.3 },
+          "HEA 220": { h: 210, b: 220, tw: 7.0, tf: 11.0, r: 18, A: 64.3, Ix: 5410.0, Iy: 1950.0, rx: 9.17, ry: 5.51, Sx: 515.0, Sy: 178.0, Zx: 568.0, Zy: 271.0, weight: 50.5 },
+          "HEA 240": { h: 230, b: 240, tw: 7.5, tf: 12.0, r: 21, A: 76.8, Ix: 7760.0, Iy: 2770.0, rx: 10.10, ry: 6.00, Sx: 675.0, Sy: 231.0, Zx: 745.0, Zy: 352.0, weight: 60.3 },
+          "HEA 260": { h: 250, b: 260, tw: 7.5, tf: 12.5, r: 24, A: 86.8, Ix: 10450.0, Iy: 3670.0, rx: 11.00, ry: 6.50, Sx: 836.0, Sy: 282.0, Zx: 919.0, Zy: 430.0, weight: 68.2 },
+          "HEA 280": { h: 270, b: 280, tw: 8.0, tf: 13.0, r: 24, A: 97.3, Ix: 13670.0, Iy: 4760.0, rx: 11.90, ry: 7.00, Sx: 1010.0, Sy: 340.0, Zx: 1110.0, Zy: 518.0, weight: 76.4 },
+          "HEA 300": { h: 290, b: 300, tw: 8.5, tf: 14.0, r: 27, A: 113.0, Ix: 18260.0, Iy: 6310.0, rx: 12.70, ry: 7.49, Sx: 1260.0, Sy: 421.0, Zx: 1383.0, Zy: 641.0, weight: 88.3 },
+          "HEA 320": { h: 310, b: 300, tw: 9.0, tf: 15.5, r: 27, A: 124.0, Ix: 22930.0, Iy: 6990.0, rx: 13.60, ry: 7.49, Sx: 1480.0, Sy: 466.0, Zx: 1628.0, Zy: 710.0, weight: 97.6 },
+          "HEA 340": { h: 330, b: 300, tw: 9.5, tf: 16.5, r: 27, A: 133.0, Ix: 27690.0, Iy: 7440.0, rx: 14.40, ry: 7.46, Sx: 1680.0, Sy: 496.0, Zx: 1850.0, Zy: 756.0, weight: 105.0 },
+          "HEA 360": { h: 350, b: 300, tw: 10.0, tf: 17.5, r: 27, A: 143.0, Ix: 33090.0, Iy: 7890.0, rx: 15.20, ry: 7.43, Sx: 1890.0, Sy: 526.0, Zx: 2088.0, Zy: 802.0, weight: 112.0 },
+          "HEA 400": { h: 390, b: 300, tw: 11.0, tf: 19.0, r: 27, A: 159.0, Ix: 45070.0, Iy: 8560.0, rx: 16.80, ry: 7.34, Sx: 2310.0, Sy: 571.0, Zx: 2562.0, Zy: 870.0, weight: 125.0 }
+        }
+      },
+      "HEM": {
+        type: "I_SHAPE",
+        name: "HEM (Alas Anchas Serie Pesada)",
+        items: {
+          "HEM 100": { h: 120, b: 106, tw: 12.0, tf: 20.0, r: 12, A: 53.2, Ix: 1140.0, Iy: 399.0, rx: 4.63, ry: 2.74, Sx: 190.0, Sy: 75.3, Zx: 235.0, Zy: 117.0, weight: 41.8 },
+          "HEM 120": { h: 140, b: 126, tw: 12.5, tf: 21.0, r: 12, A: 66.4, Ix: 2020.0, Iy: 703.0, rx: 5.51, ry: 3.25, Sx: 288.0, Sy: 112.0, Zx: 352.0, Zy: 173.0, weight: 52.1 },
+          "HEM 140": { h: 160, b: 146, tw: 13.0, tf: 22.0, r: 12, A: 80.6, Ix: 3290.0, Iy: 1140.0, rx: 6.39, ry: 3.77, Sx: 411.0, Sy: 157.0, Zx: 500.0, Zy: 242.0, weight: 63.2 },
+          "HEM 160": { h: 180, b: 166, tw: 14.0, tf: 23.0, r: 15, A: 97.1, Ix: 5100.0, Iy: 1760.0, rx: 7.25, ry: 4.26, Sx: 566.0, Sy: 212.0, Zx: 684.0, Zy: 326.0, weight: 76.2 },
+          "HEM 180": { h: 200, b: 186, tw: 14.5, tf: 24.0, r: 15, A: 113.0, Ix: 7480.0, Iy: 2580.0, rx: 8.13, ry: 4.77, Sx: 748.0, Sy: 277.0, Zx: 899.0, Zy: 425.0, weight: 88.9 },
+          "HEM 200": { h: 220, b: 206, tw: 15.0, tf: 25.0, r: 18, A: 131.0, Ix: 10640.0, Iy: 3650.0, rx: 9.00, ry: 5.27, Sx: 967.0, Sy: 354.0, Zx: 1150.0, Zy: 543.0, weight: 103.0 },
+          "HEM 220": { h: 240, b: 226, tw: 15.5, tf: 26.0, r: 18, A: 149.0, Ix: 14600.0, Iy: 5010.0, rx: 9.89, ry: 5.79, Sx: 1220.0, Sy: 443.0, Zx: 1450.0, Zy: 680.0, weight: 117.0 },
+          "HEM 240": { h: 270, b: 248, tw: 18.0, tf: 32.0, r: 21, A: 200.0, Ix: 24290.0, Iy: 8150.0, rx: 11.00, ry: 6.39, Sx: 1800.0, Sy: 657.0, Zx: 2160.0, Zy: 1010.0, weight: 157.0 },
+          "HEM 260": { h: 290, b: 268, tw: 18.0, tf: 32.5, r: 24, A: 220.0, Ix: 31310.0, Iy: 10450.0, rx: 11.90, ry: 6.89, Sx: 2160.0, Sy: 780.0, Zx: 2580.0, Zy: 1200.0, weight: 172.0 },
+          "HEM 300": { h: 340, b: 310, tw: 21.0, tf: 39.0, r: 27, A: 303.0, Ix: 59200.0, Iy: 19400.0, rx: 14.00, ry: 8.00, Sx: 3480.0, Sy: 1250.0, Zx: 4200.0, Zy: 1930.0, weight: 238.0 }
+        }
+      },
+      "IPE": {
+        type: "I_SHAPE",
+        name: "IPE (Perfil I de Alas Paralelas)",
+        items: {
+          "IPE 80":  { h: 80,  b: 46,  tw: 3.8, tf: 5.2, r: 5,  A: 7.64,  Ix: 80.14, Iy: 8.49,  rx: 3.24, ry: 1.05, Sx: 20.0,  Sy: 3.69, Zx: 23.2,  Zy: 5.82,  weight: 6.0 },
+          "IPE 100": { h: 100, b: 55,  tw: 4.1, tf: 5.7, r: 7,  A: 10.32, Ix: 171.0, Iy: 15.92, rx: 4.07, ry: 1.24, Sx: 34.2,  Sy: 5.79, Zx: 39.4,  Zy: 8.88,  weight: 8.1 },
+          "IPE 120": { h: 120, b: 64,  tw: 4.4, tf: 6.3, r: 7,  A: 13.21, Ix: 317.8, Iy: 27.67, rx: 4.90, ry: 1.45, Sx: 53.0,  Sy: 8.65, Zx: 60.7,  Zy: 13.58, weight: 10.4 },
+          "IPE 140": { h: 140, b: 73,  tw: 4.7, tf: 6.9, r: 7,  A: 16.43, Ix: 541.2, Iy: 44.92, rx: 5.74, ry: 1.65, Sx: 77.3,  Sy: 12.31, Zx: 88.3, Zy: 19.25, weight: 12.9 },
+          "IPE 160": { h: 160, b: 82,  tw: 5.0, tf: 7.4, r: 9,  A: 20.09, Ix: 869.3, Iy: 68.31, rx: 6.58, ry: 1.84, Sx: 108.7, Sy: 16.7, Zx: 123.8, Zy: 26.1,  weight: 15.8 },
+          "IPE 180": { h: 180, b: 91,  tw: 5.3, tf: 8.0, r: 9,  A: 23.95, Ix: 1317,  Iy: 100.9, rx: 7.42, ry: 2.05, Sx: 146.3, Sy: 22.2, Zx: 166.4, Zy: 34.6,  weight: 18.8 },
+          "IPE 200": { h: 200, b: 100, tw: 5.6, tf: 8.5, r: 12, A: 28.48, Ix: 1943,  Iy: 142.4, rx: 8.26, ry: 2.24, Sx: 194.3, Sy: 28.5, Zx: 220.6, Zy: 44.6,  weight: 22.4 },
+          "IPE 220": { h: 220, b: 110, tw: 5.9, tf: 9.2, r: 12, A: 33.37, Ix: 2772,  Iy: 204.8, rx: 9.11, ry: 2.48, Sx: 252.0, Sy: 37.3, Zx: 285.4, Zy: 58.1,  weight: 26.2 },
+          "IPE 240": { h: 240, b: 120, tw: 6.2, tf: 9.8, r: 15, A: 39.12, Ix: 3892,  Iy: 283.6, rx: 9.97, ry: 2.69, Sx: 324.3, Sy: 47.3, Zx: 366.6, Zy: 73.9,  weight: 30.7 },
+          "IPE 270": { h: 270, b: 135, tw: 6.6, tf: 10.2,r: 15, A: 45.95, Ix: 6010,  Iy: 419.8, rx: 11.44,ry: 3.02, Sx: 445.2, Sy: 62.2, Zx: 484.0, Zy: 96.9,  weight: 36.1 },
+          "IPE 300": { h: 300, b: 150, tw: 7.1, tf: 10.7,r: 15, A: 53.81, Ix: 8356,  Iy: 603.8, rx: 12.46,ry: 3.35, Sx: 557.1, Sy: 80.5, Zx: 628.4, Zy: 125.2, weight: 42.2 },
+          "IPE 330": { h: 330, b: 160, tw: 7.5, tf: 11.5,r: 18, A: 62.61, Ix: 11770, Iy: 788.1, rx: 13.71,ry: 3.55, Sx: 713.3, Sy: 98.5, Zx: 804.3, Zy: 153.7, weight: 49.1 },
+          "IPE 360": { h: 360, b: 170, tw: 8.0, tf: 12.7,r: 18, A: 72.73, Ix: 16270, Iy: 1043,  rx: 14.95,ry: 3.79, Sx: 903.9, Sy: 122.7,Zx: 1019,  Zy: 191.1, weight: 57.1 },
+          "IPE 400": { h: 400, b: 180, tw: 8.6, tf: 13.5,r: 21, A: 84.46, Ix: 23130, Iy: 1318,  rx: 16.55,ry: 3.95, Sx: 1156,  Sy: 146.4,Zx: 1307,  Zy: 229.0, weight: 66.3 },
+          "IPE 450": { h: 450, b: 190, tw: 9.4, tf: 14.6,r: 21, A: 98.82, Ix: 33740, Iy: 1676,  rx: 18.48,ry: 4.12, Sx: 1500,  Sy: 176.4,Zx: 1702,  Zy: 276.4, weight: 77.6 },
+          "IPE 500": { h: 500, b: 200, tw: 10.2,tf: 16.0,r: 21, A: 115.5, Ix: 48200, Iy: 2142,  rx: 20.43,ry: 4.31, Sx: 1928,  Sy: 214.2,Zx: 2194,  Zy: 335.9, weight: 90.7 },
+          "IPE 550": { h: 550, b: 210, tw: 11.1,tf: 17.2,r: 24, A: 134.4, Ix: 67120, Iy: 2668,  rx: 22.34,ry: 4.45, Sx: 2441,  Sy: 254.1,Zx: 2787,  Zy: 400.5, weight: 106.0 },
+          "IPE 600": { h: 600, b: 220, tw: 12.0,tf: 19.0,r: 24, A: 156.4, Ix: 92080, Iy: 3387,  rx: 24.28,ry: 4.65, Sx: 3069,  Sy: 307.9,Zx: 3512,  Zy: 485.6, weight: 122.0 }
+        }
+      },
+      "IPN": {
+        type: "I_SHAPE",
+        name: "IPN (Perfil I Tradicional Alas Inclinadas)",
+        items: {
+          "IPN 100": { h: 100, b: 50,  tw: 4.5, tf: 6.8, r: 4.5, A: 10.6, Ix: 171.0, Iy: 12.2, rx: 4.01, ry: 1.07, Sx: 34.2, Sy: 4.88, Zx: 39.8, Zy: 8.1, weight: 8.3 },
+          "IPN 120": { h: 120, b: 58,  tw: 5.1, tf: 7.7, r: 5.1, A: 14.2, Ix: 328.0, Iy: 21.5, rx: 4.81, ry: 1.23, Sx: 54.7, Sy: 7.41, Zx: 63.6, Zy: 12.3, weight: 11.1 },
+          "IPN 140": { h: 140, b: 66,  tw: 5.7, tf: 8.6, r: 5.7, A: 18.2, Ix: 573.0, Iy: 35.2, rx: 5.61, ry: 1.39, Sx: 81.9, Sy: 10.7, Zx: 95.4, Zy: 17.8, weight: 14.3 },
+          "IPN 160": { h: 160, b: 74,  tw: 6.3, tf: 9.5, r: 6.3, A: 22.8, Ix: 935.0, Iy: 54.7, rx: 6.40, ry: 1.55, Sx: 117.0, Sy: 14.8, Zx: 137.0, Zy: 24.8, weight: 17.9 },
+          "IPN 180": { h: 180, b: 82,  tw: 6.9, tf: 10.4,r: 6.9, A: 27.9, Ix: 1450.0, Iy: 81.3, rx: 7.20, ry: 1.71, Sx: 161.0, Sy: 19.8, Zx: 189.0, Zy: 33.3, weight: 21.9 },
+          "IPN 200": { h: 200, b: 90,  tw: 7.5, tf: 11.3,r: 7.5, A: 33.4, Ix: 2140.0, Iy: 117.0, rx: 8.00, ry: 1.87, Sx: 214.0, Sy: 26.0, Zx: 251.0, Zy: 43.8, weight: 26.2 },
+          "IPN 240": { h: 240, b: 106, tw: 8.7, tf: 13.1,r: 8.7, A: 46.1, Ix: 4250.0, Iy: 221.0, rx: 9.59, ry: 2.19, Sx: 354.0, Sy: 41.7, Zx: 418.0, Zy: 70.8, weight: 36.2 },
+          "IPN 300": { h: 300, b: 125, tw: 10.8,tf: 16.2,r: 10.8,A: 69.0, Ix: 9800.0, Iy: 451.0, rx: 11.90, ry: 2.56, Sx: 653.0, Sy: 72.2, Zx: 774.0, Zy: 124.0, weight: 54.2 }
+        }
+      },
+      "HSS_SQ": {
+        type: "HSS_BOX",
+        name: "HSS Cuadrados ASTM A500 (Catálogo CINTAC)",
+        items: {
+          "HSS 50x50x2.0":   { h: 50,  b: 50,  t: 2.0, A: 3.74,  Ix: 14.1,   Iy: 14.1,   rx: 1.94, ry: 1.94, Sx: 5.64,  Sy: 5.64,  Zx: 6.6,  Zy: 6.6,  weight: 2.93 },
+          "HSS 50x50x3.0":   { h: 50,  b: 50,  t: 3.0, A: 5.34,  Ix: 18.9,   Iy: 18.9,   rx: 1.88, ry: 1.88, Sx: 7.56,  Sy: 7.56,  Zx: 9.2,  Zy: 9.2,  weight: 4.19 },
+          "HSS 75x75x3.0":   { h: 75,  b: 75,  t: 3.0, A: 8.34,  Ix: 68.4,   Iy: 68.4,   rx: 2.86, ry: 2.86, Sx: 18.2,  Sy: 18.2,  Zx: 21.8, Zy: 21.8, weight: 6.55 },
+          "HSS 75x75x4.0":   { h: 75,  b: 75,  t: 4.0, A: 10.70, Ix: 84.1,   Iy: 84.1,   rx: 2.80, ry: 2.80, Sx: 22.4,  Sy: 22.4,  Zx: 27.5, Zy: 27.5, weight: 8.42 },
+          "HSS 100x100x3.0": { h: 100, b: 100, t: 3.0, A: 11.30, Ix: 171.0,  Iy: 171.0,  rx: 3.88, ry: 3.88, Sx: 34.1,  Sy: 34.1,  Zx: 40.2, Zy: 40.2, weight: 8.90 },
+          "HSS 100x100x4.0": { h: 100, b: 100, t: 4.0, A: 14.70, Ix: 215.0,  Iy: 215.0,  rx: 3.82, ry: 3.82, Sx: 43.1,  Sy: 43.1,  Zx: 51.6, Zy: 51.6, weight: 11.60 },
+          "HSS 100x100x5.0": { h: 100, b: 100, t: 5.0, A: 17.90, Ix: 254.0,  Iy: 254.0,  rx: 3.76, ry: 3.76, Sx: 50.8,  Sy: 50.8,  Zx: 62.0, Zy: 62.0, weight: 14.10 },
+          "HSS 135x135x4.0": { h: 135, b: 135, t: 4.0, A: 20.55, Ix: 581.4,  Iy: 581.4,  rx: 5.32, ry: 5.32, Sx: 86.1,  Sy: 86.1,  Zx: 101.5,Zy: 101.5,weight: 16.13 },
+          "HSS 135x135x5.0": { h: 135, b: 135, t: 5.0, A: 25.36, Ix: 704.2,  Iy: 704.2,  rx: 5.27, ry: 5.27, Sx: 104.3, Sy: 104.3, Zx: 124.2,Zy: 124.2,weight: 19.90 },
+          "HSS 150x150x4.0": { h: 150, b: 150, t: 4.0, A: 22.70, Ix: 790.0,  Iy: 790.0,  rx: 5.89, ry: 5.89, Sx: 105.0, Sy: 105.0, Zx: 123.0,Zy: 123.0,weight: 17.80 },
+          "HSS 150x150x5.0": { h: 150, b: 150, t: 5.0, A: 27.90, Ix: 955.0,  Iy: 955.0,  rx: 5.85, ry: 5.85, Sx: 127.0, Sy: 127.0, Zx: 151.0,Zy: 151.0,weight: 21.90 },
+          "HSS 150x150x6.0": { h: 150, b: 150, t: 6.0, A: 32.90, Ix: 1100.0, Iy: 1100.0, rx: 5.78, ry: 5.78, Sx: 147.0, Sy: 147.0, Zx: 177.0,Zy: 177.0,weight: 25.80 },
+          "HSS 200x200x5.0": { h: 200, b: 200, t: 5.0, A: 37.90, Ix: 2360.0, Iy: 2360.0, rx: 7.89, ry: 7.89, Sx: 236.0, Sy: 236.0, Zx: 275.0,Zy: 275.0,weight: 29.80 },
+          "HSS 200x200x6.0": { h: 200, b: 200, t: 6.0, A: 44.90, Ix: 2750.0, Iy: 2750.0, rx: 7.82, ry: 7.82, Sx: 275.0, Sy: 275.0, Zx: 324.0,Zy: 324.0,weight: 35.30 },
+          "HSS 200x200x8.0": { h: 200, b: 200, t: 8.0, A: 58.30, Ix: 3460.0, Iy: 3460.0, rx: 7.70, ry: 7.70, Sx: 346.0, Sy: 346.0, Zx: 416.0,Zy: 416.0,weight: 45.80 },
+          "HSS 250x250x6.0": { h: 250, b: 250, t: 6.0, A: 56.90, Ix: 5540.0, Iy: 5540.0, rx: 9.87, ry: 9.87, Sx: 443.0, Sy: 443.0, Zx: 516.0,Zy: 516.0,weight: 44.70 },
+          "HSS 250x250x8.0": { h: 250, b: 250, t: 8.0, A: 74.30, Ix: 7040.0, Iy: 7040.0, rx: 9.73, ry: 9.73, Sx: 563.0, Sy: 563.0, Zx: 668.0,Zy: 668.0,weight: 58.30 },
+          "HSS 300x300x8.0": { h: 300, b: 300, t: 8.0, A: 90.30, Ix: 12400.0,Iy: 12400.0,rx: 11.70,ry: 11.70,Sx: 827.0, Sy: 827.0, Zx: 975.0,Zy: 975.0,weight: 70.90 },
+          "HSS 300x300x10.0":{ h: 300, b: 300, t: 10.0,A: 111.0,  Ix: 14900.0,Iy: 14900.0,rx: 11.60,ry: 11.60,Sx: 993.0, Sy: 993.0, Zx: 1182.0,Zy:1182.0,weight: 87.50 }
+        }
+      },
+      "HSS_REC": {
+        type: "HSS_BOX",
+        name: "HSS Rectangulares ASTM A500 (Catálogo CINTAC)",
+        items: {
+          "HSS 100x50x2.0":  { h: 100, b: 50,  t: 2.0, A: 5.74,  Ix: 74.9,   Iy: 25.7,   rx: 3.61, ry: 2.11, Sx: 15.0,  Sy: 10.3, Zx: 18.5, Zy: 12.1, weight: 4.50 },
+          "HSS 100x50x3.0":  { h: 100, b: 50,  t: 3.0, A: 8.34,  Ix: 103.0,  Iy: 34.2,   rx: 3.52, ry: 2.02, Sx: 20.6,  Sy: 13.7, Zx: 26.2, Zy: 16.5, weight: 6.55 },
+          "HSS 120x60x3.0":  { h: 120, b: 60,  t: 3.0, A: 10.10, Ix: 198.0,  Iy: 62.4,   rx: 4.42, ry: 2.48, Sx: 33.0,  Sy: 20.8, Zx: 41.2, Zy: 25.0, weight: 7.96 },
+          "HSS 150x100x3.0": { h: 150, b: 100, t: 3.0, A: 14.30, Ix: 458.0,  Iy: 245.0,  rx: 5.65, ry: 4.14, Sx: 61.1,  Sy: 49.0, Zx: 74.2, Zy: 57.1, weight: 11.30 },
+          "HSS 150x100x4.0": { h: 150, b: 100, t: 4.0, A: 18.70, Ix: 582.0,  Iy: 310.0,  rx: 5.57, ry: 4.07, Sx: 77.6,  Sy: 62.0, Zx: 95.8, Zy: 73.1, weight: 14.70 },
+          "HSS 200x100x4.0": { h: 200, b: 100, t: 4.0, A: 22.70, Ix: 1210.0, Iy: 412.0,  rx: 7.30, ry: 4.26, Sx: 121.0, Sy: 82.4, Zx: 148.0,Zy: 96.2, weight: 17.80 },
+          "HSS 200x100x5.0": { h: 200, b: 100, t: 5.0, A: 27.90, Ix: 1450.0, Iy: 490.0,  rx: 7.21, ry: 4.19, Sx: 145.0, Sy: 98.0, Zx: 180.0,Zy: 116.0,weight: 21.90 },
+          "HSS 250x150x5.0": { h: 250, b: 150, t: 5.0, A: 37.90, Ix: 3390.0, Iy: 1480.0, rx: 9.46, ry: 6.25, Sx: 271.0, Sy: 197.0, Zx: 328.0,Zy: 228.0,weight: 29.80 },
+          "HSS 250x150x6.0": { h: 250, b: 150, t: 6.0, A: 44.90, Ix: 3950.0, Iy: 1720.0, rx: 9.38, ry: 6.19, Sx: 316.0, Sy: 230.0, Zx: 388.0,Zy: 269.0,weight: 35.30 },
+          "HSS 300x150x6.0": { h: 300, b: 150, t: 6.0, A: 50.90, Ix: 6100.0, Iy: 1980.0, rx: 10.90,ry: 6.23, Sx: 407.0, Sy: 264.0, Zx: 506.0,Zy: 308.0,weight: 40.00 },
+          "HSS 300x200x8.0": { h: 300, b: 200, t: 8.0, A: 74.30, Ix: 9540.0, Iy: 5010.0, rx: 11.30,ry: 8.21, Sx: 636.0, Sy: 501.0, Zx: 778.0,Zy: 588.0,weight: 58.30 }
+        }
+      }
     };
 
     // State Variables
@@ -561,7 +669,8 @@
     let capacityChart = null;
 
     // DOM Elements
-    const ipeSelect = document.getElementById('ipeSelect');
+    const familySelect = document.getElementById('familySelect');
+    const profileSelect = document.getElementById('profileSelect');
     const steelSelect = document.getElementById('steelSelect');
     const customFyContainer = document.getElementById('customFyContainer');
     const customFyInput = document.getElementById('customFyInput');
@@ -576,25 +685,36 @@
 
     // Initialize App
     window.addEventListener('DOMContentLoaded', () => {
-      populateIpeSelect();
+      populateProfileSelect();
       setupEventListeners();
       calculateAll();
-      renderMathInDocument();
     });
 
-    function populateIpeSelect() {
-      ipeSelect.innerHTML = '';
-      Object.keys(IPE_DATA).forEach(ipeName => {
+    function populateProfileSelect() {
+      const famKey = familySelect.value;
+      const familyData = STEEL_DATABASE[famKey];
+      profileSelect.innerHTML = '';
+
+      Object.keys(familyData.items).forEach((pName, index) => {
         const option = document.createElement('option');
-        option.value = ipeName;
-        option.textContent = ipeName;
-        if (ipeName === 'IPE 300') option.selected = true;
-        ipeSelect.appendChild(option);
+        option.value = pName;
+        option.textContent = `${pName} (${familyData.items[pName].weight} kg/m)`;
+        // Set default selection
+        if (pName === 'HEB 200' || (index === 0 && !profileSelect.value)) {
+          option.selected = true;
+        }
+        profileSelect.appendChild(option);
       });
     }
 
     function setupEventListeners() {
-      ipeSelect.addEventListener('change', calculateAll);
+      familySelect.addEventListener('change', () => {
+        populateProfileSelect();
+        calculateAll();
+      });
+
+      profileSelect.addEventListener('change', calculateAll);
+
       steelSelect.addEventListener('change', () => {
         if (steelSelect.value === 'custom') {
           customFyContainer.classList.remove('hidden');
@@ -603,6 +723,7 @@
         }
         calculateAll();
       });
+
       customFyInput.addEventListener('input', calculateAll);
 
       lengthLy.addEventListener('input', () => {
@@ -644,8 +765,10 @@
       });
 
       document.getElementById('resetDefaultsBtn').addEventListener('click', () => {
-        ipeSelect.value = 'IPE 300';
-        steelSelect.value = '250';
+        familySelect.value = 'HEB';
+        populateProfileSelect();
+        profileSelect.value = 'HEB 200';
+        steelSelect.value = '317';
         customFyContainer.classList.add('hidden');
         lengthLy.value = '3.00';
         lengthLx.value = '3.00';
@@ -670,17 +793,16 @@
       return parseFloat(steelSelect.value);
     }
 
-    // AISC 360-16 COMPRESSION CALCULATION ENGINE
-    function calculateAiscCompression(ipeName, Fy, Ly_m, Lx_m, Ky, Kx) {
-      const p = IPE_DATA[ipeName];
+    function calculateAiscCompression(famKey, profileName, Fy, Ly_m, Lx_m, Ky, Kx) {
+      const family = STEEL_DATABASE[famKey];
+      const p = family.items[profileName];
       const E = 200000; // MPa
 
-      // 1. Geometrical Conversions
+      // Conversions
       const A_mm2 = p.A * 100; // cm2 -> mm2
       const rx_mm = p.rx * 10;  // cm -> mm
       const ry_mm = p.ry * 10;  // cm -> mm
 
-      // 2. Slenderness Ratios
       const Lx_mm = Lx_m * 1000;
       const Ly_mm = Ly_m * 1000;
 
@@ -689,43 +811,78 @@
       const klr_max = Math.max(klr_x, klr_y);
       const governingAxis = (klr_y >= klr_x) ? 'Y-Y (Eje Débil)' : 'X-X (Eje Fuerte)';
 
-      // 3. Local Slenderness Check (AISC Table B4.1a for Compression)
-      // Flange (Unstiffened)
-      const lambda_f = p.b / (2 * p.tf);
-      const lambda_rf = 0.56 * Math.sqrt(E / Fy);
-      const isFlangeSlender = lambda_f > lambda_rf;
+      let isFlangeSlender = false;
+      let isWebSlender = false;
+      let lambda_f = 0, lambda_rf = 0, Qs = 1.0;
+      let lambda_w = 0, lambda_rw = 0, Qa = 1.0;
+      let Q = 1.0;
 
-      let Qs = 1.0;
-      if (isFlangeSlender) {
-        if (lambda_f <= 1.03 * Math.sqrt(E / Fy)) {
-          Qs = 1.415 - 0.74 * lambda_f * Math.sqrt(Fy / E);
-        } else {
-          Qs = (0.69 * E) / (Fy * Math.pow(lambda_f, 2));
+      if (family.type === "I_SHAPE") {
+        // I/H Shapes local buckling (Table B4.1a Cases 1 & 5)
+        lambda_f = p.b / (2 * p.tf);
+        lambda_rf = 0.56 * Math.sqrt(E / Fy);
+        isFlangeSlender = lambda_f > lambda_rf;
+
+        if (isFlangeSlender) {
+          if (lambda_f <= 1.03 * Math.sqrt(E / Fy)) {
+            Qs = 1.415 - 0.74 * lambda_f * Math.sqrt(Fy / E);
+          } else {
+            Qs = (0.69 * E) / (Fy * Math.pow(lambda_f, 2));
+          }
         }
-      }
 
-      // Web (Stiffened)
-      const h_web = p.h - 2 * (p.tf + p.r);
-      const lambda_w = h_web / p.tw;
-      const lambda_rw = 1.49 * Math.sqrt(E / Fy);
-      const isWebSlender = lambda_w > lambda_rw;
+        const h_web = p.h - 2 * (p.tf + (p.r || 10));
+        lambda_w = h_web / p.tw;
+        lambda_rw = 1.49 * Math.sqrt(E / Fy);
+        isWebSlender = lambda_w > lambda_rw;
 
-      let Qa = 1.0;
-      if (isWebSlender) {
-        // Simplified web reduction estimation
-        const f_est = Fy; // upper bound conservative
-        const b_eff = 1.92 * p.tw * Math.sqrt(E / f_est) * (1 - (0.34 / (lambda_w)) * Math.sqrt(E / f_est));
-        const b_eff_clamped = Math.min(h_web, Math.max(0, b_eff));
-        const A_eff = A_mm2 - (h_web - b_eff_clamped) * p.tw;
+        if (isWebSlender) {
+          const f_est = Fy;
+          const b_eff = 1.92 * p.tw * Math.sqrt(E / f_est) * (1 - (0.34 / lambda_w) * Math.sqrt(E / f_est));
+          const b_eff_clamped = Math.min(h_web, Math.max(0, b_eff));
+          const A_eff = A_mm2 - (h_web - b_eff_clamped) * p.tw;
+          Qa = A_eff / A_mm2;
+        }
+
+        Q = Math.max(0.2, Math.min(1.0, Qs * Qa));
+
+      } else if (family.type === "HSS_BOX") {
+        // Rectangular/Square HSS local buckling (Table B4.1a Case 6)
+        // Walls stiffened
+        const t = p.t;
+        const b_clear = p.b - 3 * t;
+        const h_clear = p.h - 3 * t;
+
+        lambda_f = b_clear / t; // Flange wall
+        lambda_w = h_clear / t; // Web wall
+        lambda_rf = 1.40 * Math.sqrt(E / Fy);
+        lambda_rw = 1.40 * Math.sqrt(E / Fy);
+
+        isFlangeSlender = lambda_f > lambda_rf;
+        isWebSlender = lambda_w > lambda_rw;
+
+        let A_eff = A_mm2;
+
+        if (isFlangeSlender) {
+          const be = 1.92 * t * Math.sqrt(E / Fy) * (1 - (0.38 / lambda_f) * Math.sqrt(E / Fy));
+          const be_clamped = Math.min(b_clear, Math.max(0, be));
+          A_eff -= 2 * (b_clear - be_clamped) * t;
+        }
+        if (isWebSlender) {
+          const he = 1.92 * t * Math.sqrt(E / Fy) * (1 - (0.38 / lambda_w) * Math.sqrt(E / Fy));
+          const he_clamped = Math.min(h_clear, Math.max(0, he));
+          A_eff -= 2 * (h_clear - he_clamped) * t;
+        }
+
         Qa = A_eff / A_mm2;
+        Qs = 1.0;
+        Q = Math.max(0.2, Math.min(1.0, Qa));
       }
 
-      const Q = Math.max(0.2, Math.min(1.0, Qs * Qa));
-
-      // 4. Elastic Buckling Stress Fe
+      // Elastic Buckling Stress Fe
       const Fe = (Math.PI * Math.PI * E) / Math.pow(klr_max, 2);
 
-      // 5. Critical Stress Fcr (AISC E3 / E7)
+      // Critical Stress Fcr (AISC E3 / E7)
       const limitKlr = 4.71 * Math.sqrt(E / (Q * Fy));
       let Fcr = 0;
       let bucklingType = '';
@@ -738,11 +895,11 @@
         Fcr = 0.877 * Fe;
       }
 
-      // 6. Nominal Strength Pn
+      // Nominal Strength Pn
       const Pn_N = Fcr * A_mm2; // N
       const Pn_kN = Pn_N / 1000;
 
-      // 7. Design Strengths
+      // Design Strengths
       const phi_c = 0.90;
       const omega_c = 1.67;
 
@@ -750,6 +907,7 @@
       const PnOmega_kN = Pn_kN / omega_c;
 
       return {
+        family,
         p,
         Fy,
         klr_x,
@@ -775,16 +933,18 @@
       };
     }
 
-    // MAIN RECALCULATION & UI UPDATE
     function calculateAll() {
-      const ipeName = ipeSelect.value;
+      const famKey = familySelect.value;
+      const profileName = profileSelect.value;
       const Fy = getFy();
       const Ly_m = parseFloat(lengthLy.value) || 0.1;
       const Lx_m = parseFloat(lengthLx.value) || 0.1;
       const Ky = parseFloat(factorKy.value) || 1.0;
       const Kx = parseFloat(factorKx.value) || 1.0;
 
-      const res = calculateAiscCompression(ipeName, Fy, Ly_m, Lx_m, Ky, Kx);
+      if (!STEEL_DATABASE[famKey] || !STEEL_DATABASE[famKey].items[profileName]) return;
+
+      const res = calculateAiscCompression(famKey, profileName, Fy, Ly_m, Lx_m, Ky, Kx);
 
       // Update Summary Cards
       document.getElementById('lrfdCapKn').textContent = res.phiPn_kN.toFixed(1);
@@ -802,7 +962,7 @@
 
       if (res.klr_max > 200) {
         slendernessIndicator.className = 'absolute top-0 right-0 w-2 h-full bg-red-500';
-        slendernessStatusText.innerHTML = '<span class="text-red-600 font-bold">¡Excede KL/r > 200!</span>';
+        slendernessStatusText.innerHTML = '<span class="text-red-600 font-bold">Excede KL/r > 200!</span>';
       } else if (res.klr_max > 150) {
         slendernessIndicator.className = 'absolute top-0 right-0 w-2 h-full bg-amber-500';
         slendernessStatusText.textContent = 'Esbeltez elevada (KL/r > 150)';
@@ -851,7 +1011,7 @@
 
           bannerShow = true;
           bannerTitle = '¡Capacidad Insuficiente! (D/C > 1.0)';
-          bannerMsg = `La carga requerida (${P_req_kN.toFixed(1)} kN) supera la resistencia de diseño LRFD (${res.phiPn_kN.toFixed(1)} kN). Seleccione un perfil IPE mayor o reduzca la longitud no arriostrada.`;
+          bannerMsg = `La carga requerida (${P_req_kN.toFixed(1)} kN) supera la resistencia de diseño LRFD (${res.phiPn_kN.toFixed(1)} kN). Seleccione un perfil mayor o reduzca la longitud no arriostrada.`;
           bannerType = 'danger';
         }
 
@@ -887,70 +1047,117 @@
         alertBanner.classList.add('hidden');
       }
 
-      // Update Step-by-Step Breakdown Text
-      document.getElementById('selectedIpeBadge').textContent = `Perfil: ${ipeName} (${res.p.weight} kg/m)`;
-      document.getElementById('propA').textContent = `${res.p.A} cm²`;
-      document.getElementById('propH').textContent = `${res.p.h} mm`;
-      document.getElementById('propB').textContent = `${res.p.b} mm`;
-      document.getElementById('propTf').textContent = `${res.p.tf} mm`;
-      document.getElementById('propTw').textContent = `${res.p.tw} mm`;
-      document.getElementById('propRx').textContent = `${res.p.rx} cm`;
-      document.getElementById('propRy').textContent = `${res.p.ry} cm`;
+      document.getElementById('selectedIpeBadge').textContent = `Perfil: ${profileName} (${res.p.weight} kg/m)`;
 
-      // Flange / Web Slenderness
-      document.getElementById('calcLambdaF').textContent = res.lambda_f.toFixed(2);
-      document.getElementById('calcLambdaRf').textContent = res.lambda_rf.toFixed(2);
-      const flangeBadge = document.getElementById('flangeSlenderBadge');
-      if (res.isFlangeSlender) {
-        flangeBadge.textContent = 'ESBELTA';
-        flangeBadge.className = 'text-[10px] px-2 py-0.5 rounded font-semibold bg-red-100 text-red-800';
-        document.getElementById('flangeStatusDesc').textContent = `Como λf > λrf, el ala es esbelta (Factor Qs = ${res.Qs.toFixed(3)}).`;
+      // Step 1 Grid Properties
+      const step1Grid = document.getElementById('step1PropGrid');
+      if (res.family.type === "I_SHAPE") {
+        step1Grid.innerHTML = `
+          <div><span class="text-slate-500 block">Área (<span class="katex-ag"></span>):</span> <strong class="text-slate-800">${res.p.A} cm²</strong></div>
+          <div><span class="text-slate-500 block">Altura (<span class="katex-h"></span>):</span> <strong class="text-slate-800">${res.p.h} mm</strong></div>
+          <div><span class="text-slate-500 block">Ancho Ala (<span class="katex-bf"></span>):</span> <strong class="text-slate-800">${res.p.b} mm</strong></div>
+          <div><span class="text-slate-500 block">Espesor Ala (<span class="katex-tf"></span>):</span> <strong class="text-slate-800">${res.p.tf} mm</strong></div>
+          <div><span class="text-slate-500 block">Espesor Alma (<span class="katex-tw"></span>):</span> <strong class="text-slate-800">${res.p.tw} mm</strong></div>
+          <div><span class="text-slate-500 block">Radio Giro (<span class="katex-rx"></span>):</span> <strong class="text-slate-800">${res.p.rx} cm</strong></div>
+          <div><span class="text-slate-500 block">Radio Giro (<span class="katex-ry"></span>):</span> <strong class="text-slate-800">${res.p.ry} cm</strong></div>
+          <div><span class="text-slate-500 block">Módulo <span class="katex-e"></span>:</span> <strong class="text-slate-800">200,000 MPa</strong></div>
+        `;
       } else {
-        flangeBadge.textContent = 'NO ESBELTA';
-        flangeBadge.className = 'text-[10px] px-2 py-0.5 rounded font-semibold bg-emerald-100 text-emerald-800';
-        document.getElementById('flangeStatusDesc').textContent = `Como λf ≤ λrf, el ala no es esbelta (Qs = 1.0).`;
+        step1Grid.innerHTML = `
+          <div><span class="text-slate-500 block">Área (<span class="katex-ag"></span>):</span> <strong class="text-slate-800">${res.p.A} cm²</strong></div>
+          <div><span class="text-slate-500 block">Alto (<span class="katex-h"></span>):</span> <strong class="text-slate-800">${res.p.h} mm</strong></div>
+          <div><span class="text-slate-500 block">Ancho (<span class="katex-b"></span>):</span> <strong class="text-slate-800">${res.p.b} mm</strong></div>
+          <div><span class="text-slate-500 block">Espesor (<span class="katex-t"></span>):</span> <strong class="text-slate-800">${res.p.t} mm</strong></div>
+          <div><span class="text-slate-500 block">Radio Giro (<span class="katex-rx"></span>):</span> <strong class="text-slate-800">${res.p.rx} cm</strong></div>
+          <div><span class="text-slate-500 block">Radio Giro (<span class="katex-ry"></span>):</span> <strong class="text-slate-800">${res.p.ry} cm</strong></div>
+          <div><span class="text-slate-500 block">Inercia <span class="katex-ix"></span>:</span> <strong class="text-slate-800">${res.p.Ix} cm⁴</strong></div>
+          <div><span class="text-slate-500 block">Módulo <span class="katex-e"></span>:</span> <strong class="text-slate-800">200,000 MPa</strong></div>
+        `;
       }
 
-      document.getElementById('calcLambdaW').textContent = res.lambda_w.toFixed(2);
-      document.getElementById('calcLambdaRw').textContent = res.lambda_rw.toFixed(2);
-      const webBadge = document.getElementById('webSlenderBadge');
-      if (res.isWebSlender) {
-        webBadge.textContent = 'ESBELTA';
-        webBadge.className = 'text-[10px] px-2 py-0.5 rounded font-semibold bg-red-100 text-red-800';
-        document.getElementById('webStatusDesc').textContent = `Como λw > λrw, el alma es esbelta (Factor Qa = ${res.Qa.toFixed(3)}).`;
+      // Step 2 Slenderness Container
+      const step2Container = document.getElementById('step2SlendernessContainer');
+      if (res.family.type === "I_SHAPE") {
+        document.getElementById('lblNetQFormula').innerHTML = `\\(Q = Q_s \\cdot Q_a\\)`;
+        step2Container.innerHTML = `
+          <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 space-y-1">
+            <div class="font-bold text-slate-800 flex justify-between">
+              <span>Ala (Elemento No Rigidizado)</span>
+              <span class="text-[10px] px-2 py-0.5 rounded font-semibold ${res.isFlangeSlender ? 'bg-red-100 text-red-800' : 'bg-emerald-100 text-emerald-800'}">
+                ${res.isFlangeSlender ? 'ESBELTA' : 'NO ESBELTA'}
+              </span>
+            </div>
+            <p class="text-slate-600">\\(\\lambda_f = \\frac{b_f}{2 t_f} = \\mathbf{${res.lambda_f.toFixed(2)}}\\)</p>
+            <p class="text-slate-600">\\(\\lambda_{r,f} = 0.56 \\sqrt{\\frac{E}{F_y}} = \\mathbf{${res.lambda_rf.toFixed(2)}}\\)</p>
+            <p class="text-[11px] text-slate-500 italic">
+              ${res.isFlangeSlender ? `Como \\(\\lambda_f > \\lambda_{r,f}\\), el ala es esbelta (Factor \\(Q_s = ${res.Qs.toFixed(3)}\\)).` : `Como \\(\\lambda_f \\le \\lambda_{r,f}\\), el ala no es esbelta (\\(Q_s = 1.0\\)).`}
+            </p>
+          </div>
+
+          <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 space-y-1">
+            <div class="font-bold text-slate-800 flex justify-between">
+              <span>Alma (Elemento Rigidizado)</span>
+              <span class="text-[10px] px-2 py-0.5 rounded font-semibold ${res.isWebSlender ? 'bg-red-100 text-red-800' : 'bg-emerald-100 text-emerald-800'}">
+                ${res.isWebSlender ? 'ESBELTA' : 'NO ESBELTA'}
+              </span>
+            </div>
+            <p class="text-slate-600">\\(\\lambda_w = \\frac{h - 2k}{t_w} = \\mathbf{${res.lambda_w.toFixed(2)}}\\)</p>
+            <p class="text-slate-600">\\(\\lambda_{r,w} = 1.49 \\sqrt{\\frac{E}{F_y}} = \\mathbf{${res.lambda_rw.toFixed(2)}}\\)</p>
+            <p class="text-[11px] text-slate-500 italic">
+              ${res.isWebSlender ? `Como \\(\\lambda_w > \\lambda_{r,w}\\), el alma es esbelta (Factor \\(Q_a = ${res.Qa.toFixed(3)}\\)).` : `Como \\(\\lambda_w \\le \\lambda_{r,w}\\), el alma no es esbelta (\\(Q_a = 1.0\\)).`}
+            </p>
+          </div>
+        `;
       } else {
-        webBadge.textContent = 'NO ESBELTA';
-        webBadge.className = 'text-[10px] px-2 py-0.5 rounded font-semibold bg-emerald-100 text-emerald-800';
-        document.getElementById('webStatusDesc').textContent = `Como λw ≤ λrw, el alma no es esbelta (Qa = 1.0).`;
+        document.getElementById('lblNetQFormula').innerHTML = `\\(Q = Q_a\\)`;
+        step2Container.innerHTML = `
+          <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 space-y-1">
+            <div class="font-bold text-slate-800 flex justify-between">
+              <span>Paredes Ancho B (Elemento Rigidizado)</span>
+              <span class="text-[10px] px-2 py-0.5 rounded font-semibold ${res.isFlangeSlender ? 'bg-red-100 text-red-800' : 'bg-emerald-100 text-emerald-800'}">
+                ${res.isFlangeSlender ? 'ESBELTA' : 'NO ESBELTA'}
+              </span>
+            </div>
+            <p class="text-slate-600">\\(\\lambda_b = \\frac{B - 3t}{t} = \\mathbf{${res.lambda_f.toFixed(2)}}\\)</p>
+            <p class="text-slate-600">\\(\\lambda_r = 1.40 \\sqrt{\\frac{E}{F_y}} = \\mathbf{${res.lambda_rf.toFixed(2)}}\\)</p>
+          </div>
+
+          <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 space-y-1">
+            <div class="font-bold text-slate-800 flex justify-between">
+              <span>Paredes Alto H (Elemento Rigidizado)</span>
+              <span class="text-[10px] px-2 py-0.5 rounded font-semibold ${res.isWebSlender ? 'bg-red-100 text-red-800' : 'bg-emerald-100 text-emerald-800'}">
+                ${res.isWebSlender ? 'ESBELTA' : 'NO ESBELTA'}
+              </span>
+            </div>
+            <p class="text-slate-600">\\(\\lambda_h = \\frac{H - 3t}{t} = \\mathbf{${res.lambda_w.toFixed(2)}}\\)</p>
+            <p class="text-slate-600">\\(\\lambda_r = 1.40 \\sqrt{\\frac{E}{F_y}} = \\mathbf{${res.lambda_rw.toFixed(2)}}\\)</p>
+          </div>
+        `;
       }
 
       document.getElementById('calcNetQ').textContent = res.Q.toFixed(3);
 
-      // Render Step 3 Slenderness formulas with KaTeX
       if (typeof katex !== 'undefined') {
+        // Step 3 Formulas
         const klrxTex = `\\left(\\frac{KL}{r}\\right)_x = \\frac{K_x \\cdot L_x}{r_x} = \\frac{${Kx.toFixed(2)} \\cdot ${Lx_m.toFixed(2)}\\text{ m}}{${res.p.rx}\\text{ cm}} = \\mathbf{${res.klr_x.toFixed(2)}}`;
         document.getElementById('klrxFormulaContainer').innerHTML = katex.renderToString(klrxTex, { displayMode: false, throwOnError: false });
 
         const klryTex = `\\left(\\frac{KL}{r}\\right)_y = \\frac{K_y \\cdot L_y}{r_y} = \\frac{${Ky.toFixed(2)} \\cdot ${Ly_m.toFixed(2)}\\text{ m}}{${res.p.ry}\\text{ cm}} = \\mathbf{${res.klr_y.toFixed(2)}}`;
         document.getElementById('klryFormulaContainer').innerHTML = katex.renderToString(klryTex, { displayMode: false, throwOnError: false });
-      }
 
-      // Render Fe formula
-      if (typeof katex !== 'undefined') {
+        // Step 4 Formulas
         const feTex = `F_e = \\frac{\\pi^2 E}{(KL/r)_{max}^2} = \\frac{\\pi^2 \\cdot 200000}{${res.klr_max.toFixed(2)}^2} = \\mathbf{${res.Fe.toFixed(2)}\\text{ MPa}}`;
         document.getElementById('feFormulaContainer').innerHTML = katex.renderToString(feTex, { displayMode: true, throwOnError: false });
 
-        // Render Limit formula
-        const limitTex = `4.71 \\sqrt{\\frac{200000}{${(res.Q * Fy).toFixed(1)}}} = \\mathbf{${res.limitKlr.toFixed(2)}}`;
+        const limitTex = `4.71 \\sqrt{\\frac{E}{Q \\cdot F_y}} = 4.71 \\sqrt{\\frac{200000}{${(res.Q * Fy).toFixed(1)}}} = \\mathbf{${res.limitKlr.toFixed(2)}}`;
         document.getElementById('limitFormulaContainer').innerHTML = katex.renderToString(limitTex, { displayMode: false, throwOnError: false });
 
-        // Render Fcr formula
         const fcrTex = res.bucklingType === 'Inelástico' 
           ? `F_{cr} = Q \\left[ 0.658^{\\frac{Q \\cdot F_y}{F_e}} \\right] F_y = ${res.Q.toFixed(3)} \\left[ 0.658^{\\frac{${(res.Q * Fy).toFixed(1)}}{${res.Fe.toFixed(2)}}} \\right] ${Fy} = \\mathbf{${res.Fcr.toFixed(2)}\\text{ MPa}}`
           : `F_{cr} = 0.877 \\cdot F_e = 0.877 \\cdot ${res.Fe.toFixed(2)} = \\mathbf{${res.Fcr.toFixed(2)}\\text{ MPa}}`;
         document.getElementById('fcrFormulaContainer').innerHTML = katex.renderToString(fcrTex, { displayMode: true, throwOnError: false });
 
-        // Render Step 5 LRFD and ASD formulas with KaTeX
+        // Step 5 Formulas
         const lrfdTex = `\\phi_c P_n = 0.90 \\times ${res.Pn_kN.toFixed(1)}\\text{ kN}`;
         document.getElementById('lrfdFormulaContainer').innerHTML = katex.renderToString(lrfdTex, { displayMode: false, throwOnError: false });
 
@@ -976,23 +1183,21 @@
       document.getElementById('asdFinalTon').textContent = `${(res.PnOmega_kN / 9.80665).toFixed(2)} tonf / ${(res.PnOmega_kN * 101.972).toLocaleString('es-ES', {maximumFractionDigits:0})} kgf`;
 
       // Update Visuals
-      renderSvgSection(res.p);
-      updatePropertiesTable(res.p);
-      updateCapacityChart(ipeName, Fy, Ky, Kx, Ly_m);
+      renderSvgSection(res.family.type, res.p);
+      updatePropertiesTable(res.family.type, res.p);
+      updateCapacityChart(famKey, profileName, Fy, Ky, Kx, Ly_m);
 
       renderMathInDocument();
     }
 
-    // DRAW SVG IPE CROSS SECTION
-    function renderSvgSection(p) {
+    // DRAW SVG SECTION (AUTOMATICALLY SWITCHES BETWEEN I/H BEAM AND BOX SECTION)
+    function renderSvgSection(type, p) {
       const container = document.getElementById('svgContainer');
       const maxDim = 220;
-      const scale = maxDim / p.h;
+      const scale = maxDim / Math.max(p.h, p.b);
 
       const h_px = p.h * scale;
       const b_px = p.b * scale;
-      const tf_px = Math.max(3, p.tf * scale);
-      const tw_px = Math.max(2, p.tw * scale);
 
       const viewBoxWidth = 280;
       const viewBoxHeight = 280;
@@ -1004,17 +1209,14 @@
       const y_top = cy - h_px / 2;
       const y_bottom = cy + h_px / 2;
 
-      const svgHtml = `
-        <svg width="260" height="260" viewBox="0 0 ${viewBoxWidth} ${viewBoxHeight}" xmlns="http://www.w3.org/2000/svg" class="select-none">
-          <!-- Background Grid Lines -->
-          <line x1="${cx}" y1="20" x2="${cx}" y2="${viewBoxHeight - 20}" stroke="#94a3b8" stroke-dasharray="4,4" stroke-width="1.5" />
-          <line x1="20" y1="${cy}" x2="${viewBoxWidth - 20}" y2="${cy}" stroke="#94a3b8" stroke-dasharray="4,4" stroke-width="1.5" />
+      let shapePath = '';
+      let dimsHtml = '';
 
-          <!-- Axis Labels -->
-          <text x="${viewBoxWidth - 15}" y="${cy - 5}" font-size="11" font-weight="bold" fill="#64748b">X</text>
-          <text x="${cx + 5}" y="25" font-size="11" font-weight="bold" fill="#64748b">Y</text>
+      if (type === "I_SHAPE") {
+        const tf_px = Math.max(3, p.tf * scale);
+        const tw_px = Math.max(2, p.tw * scale);
 
-          <!-- IPE Profile Path -->
+        shapePath = `
           <path d="
             M ${x_left} ${y_top}
             H ${x_right}
@@ -1030,6 +1232,41 @@
             H ${x_left}
             Z
           " fill="#cbd5e1" stroke="#1e293b" stroke-width="2.5" stroke-linejoin="round" />
+        `;
+
+        dimsHtml = `
+          <!-- Dimension tf -->
+          <text x="${x_left - 38}" y="${y_top + tf_px / 2 + 4}" font-size="10" font-weight="bold" fill="#475569">tf=${p.tf}</text>
+          <!-- Dimension tw -->
+          <text x="${cx - 12}" y="${y_bottom - tf_px - 8}" font-size="10" font-weight="bold" fill="#475569">tw=${p.tw}</text>
+        `;
+      } else {
+        // HSS BOX
+        const t_px = Math.max(3, p.t * scale);
+        shapePath = `
+          <!-- Outer Box -->
+          <rect x="${x_left}" y="${y_top}" width="${b_px}" height="${h_px}" rx="${t_px}" fill="#cbd5e1" stroke="#1e293b" stroke-width="2.5" />
+          <!-- Inner Cutout -->
+          <rect x="${x_left + t_px}" y="${y_top + t_px}" width="${b_px - 2 * t_px}" height="${h_px - 2 * t_px}" rx="${Math.max(1, t_px - 1)}" fill="#f1f5f9" stroke="#1e293b" stroke-width="1.5" />
+        `;
+
+        dimsHtml = `
+          <!-- Dimension t -->
+          <text x="${x_left + t_px + 4}" y="${cy + 4}" font-size="10" font-weight="bold" fill="#475569">t=${p.t}mm</text>
+        `;
+      }
+
+      const svgHtml = `
+        <svg width="260" height="260" viewBox="0 0 ${viewBoxWidth} ${viewBoxHeight}" xmlns="http://www.w3.org/2000/svg" class="select-none">
+          <!-- Background Grid Lines -->
+          <line x1="${cx}" y1="20" x2="${cx}" y2="${viewBoxHeight - 20}" stroke="#94a3b8" stroke-dasharray="4,4" stroke-width="1.5" />
+          <line x1="20" y1="${cy}" x2="${viewBoxWidth - 20}" y2="${cy}" stroke="#94a3b8" stroke-dasharray="4,4" stroke-width="1.5" />
+
+          <!-- Axis Labels -->
+          <text x="${viewBoxWidth - 15}" y="${cy - 5}" font-size="11" font-weight="bold" fill="#64748b">X</text>
+          <text x="${cx + 5}" y="25" font-size="11" font-weight="bold" fill="#64748b">Y</text>
+
+          ${shapePath}
 
           <!-- Dimension Line Height h -->
           <line x1="${x_right + 15}" y1="${y_top}" x2="${x_right + 15}" y2="${y_bottom}" stroke="#2563eb" stroke-width="1.5" />
@@ -1043,38 +1280,51 @@
           <line x1="${x_right}" y1="${y_top - 20}" x2="${x_right}" y2="${y_top - 10}" stroke="#2563eb" stroke-width="1.5" />
           <text x="${cx - 25}" y="${y_top - 22}" font-size="11" font-weight="bold" fill="#1e40af">b = ${p.b} mm</text>
 
-          <!-- Dimension tf -->
-          <text x="${x_left - 38}" y="${y_top + tf_px / 2 + 4}" font-size="10" font-weight="bold" fill="#475569">tf=${p.tf}</text>
-
-          <!-- Dimension tw -->
-          <text x="${cx - 12}" y="${y_bottom - tf_px - 8}" font-size="10" font-weight="bold" fill="#475569">tw=${p.tw}</text>
+          ${dimsHtml}
         </svg>
       `;
       container.innerHTML = svgHtml;
     }
 
     // UPDATE SECTION PROPERTIES TABLE
-    function updatePropertiesTable(p) {
+    function updatePropertiesTable(type, p) {
       const tbody = document.getElementById('propertiesTableBody');
-      const props = [
-        { name: 'Área de la Sección Transversal', sym: 'A', val: p.A, unit: 'cm²' },
-        { name: 'Peso Nomimal por Metro', sym: 'P', val: p.weight, unit: 'kg/m' },
-        { name: 'Altura Total de la Sección', sym: 'h', val: p.h, unit: 'mm' },
-        { name: 'Ancho del Ala', sym: 'b', val: p.b, unit: 'mm' },
-        { name: 'Espesor del Alma', sym: 'tw', val: p.tw, unit: 'mm' },
-        { name: 'Espesor del Ala', sym: 'tf', val: p.tf, unit: 'mm' },
-        { name: 'Radio de Empalme Alma-Ala', sym: 'r', val: p.r, unit: 'mm' },
-        { name: 'Momento de Inercia Eje Fuerte', sym: 'Ix', val: p.Ix, unit: 'cm⁴' },
-        { name: 'Momento de Inercia Eje Débil', sym: 'Iy', val: p.Iy, unit: 'cm⁴' },
-        { name: 'Radio de Giro Eje Fuerte', sym: 'rx', val: p.rx, unit: 'cm' },
-        { name: 'Radio de Giro Eje Débil', sym: 'ry', val: p.ry, unit: 'cm' },
-        { name: 'Módulo Elástico Eje Fuerte', sym: 'Sx', val: p.Sx, unit: 'cm³' },
-        { name: 'Módulo Elástico Eje Débil', sym: 'Sy', val: p.Sy, unit: 'cm³' },
-        { name: 'Módulo Plástico Eje Fuerte', sym: 'Zx', val: p.Zx, unit: 'cm³' },
-        { name: 'Módulo Plástico Eje Débil', sym: 'Zy', val: p.Zy, unit: 'cm³' },
-        { name: 'Módulo de Torsión de St. Venant', sym: 'J', val: p.J, unit: 'cm⁴' },
-        { name: 'Constante de Alabeo', sym: 'Cw', val: p.Cw, unit: 'cm⁶' }
-      ];
+      let props = [];
+
+      if (type === "I_SHAPE") {
+        props = [
+          { name: 'Área de la Sección Transversal', sym: 'A', val: p.A, unit: 'cm²' },
+          { name: 'Peso Nominal por Metro', sym: 'P', val: p.weight, unit: 'kg/m' },
+          { name: 'Altura Total de la Sección', sym: 'h', val: p.h, unit: 'mm' },
+          { name: 'Ancho del Ala', sym: 'b', val: p.b, unit: 'mm' },
+          { name: 'Espesor del Alma', sym: 'tw', val: p.tw, unit: 'mm' },
+          { name: 'Espesor del Ala', sym: 'tf', val: p.tf, unit: 'mm' },
+          { name: 'Momento de Inercia Eje Fuerte', sym: 'Ix', val: p.Ix, unit: 'cm⁴' },
+          { name: 'Momento de Inercia Eje Débil', sym: 'Iy', val: p.Iy, unit: 'cm⁴' },
+          { name: 'Radio de Giro Eje Fuerte', sym: 'rx', val: p.rx, unit: 'cm' },
+          { name: 'Radio de Giro Eje Débil', sym: 'ry', val: p.ry, unit: 'cm' },
+          { name: 'Módulo Elástico Eje Fuerte', sym: 'Sx', val: p.Sx, unit: 'cm³' },
+          { name: 'Módulo Elástico Eje Débil', sym: 'Sy', val: p.Sy, unit: 'cm³' },
+          { name: 'Módulo Plástico Eje Fuerte', sym: 'Zx', val: p.Zx, unit: 'cm³' },
+          { name: 'Módulo Plástico Eje Débil', sym: 'Zy', val: p.Zy, unit: 'cm³' }
+        ];
+      } else {
+        props = [
+          { name: 'Área de la Sección Transversal', sym: 'A', val: p.A, unit: 'cm²' },
+          { name: 'Peso Nominal por Metro', sym: 'P', val: p.weight, unit: 'kg/m' },
+          { name: 'Alto Exterior', sym: 'H', val: p.h, unit: 'mm' },
+          { name: 'Ancho Exterior', sym: 'B', val: p.b, unit: 'mm' },
+          { name: 'Espesor de Pared', sym: 't', val: p.t, unit: 'mm' },
+          { name: 'Momento de Inercia Eje X-X', sym: 'Ix', val: p.Ix, unit: 'cm⁴' },
+          { name: 'Momento de Inercia Eje Y-Y', sym: 'Iy', val: p.Iy, unit: 'cm⁴' },
+          { name: 'Radio de Giro Eje X-X', sym: 'rx', val: p.rx, unit: 'cm' },
+          { name: 'Radio de Giro Eje Y-Y', sym: 'ry', val: p.ry, unit: 'cm' },
+          { name: 'Módulo Elástico Eje X-X', sym: 'Sx', val: p.Sx, unit: 'cm³' },
+          { name: 'Módulo Elástico Eje Y-Y', sym: 'Sy', val: p.Sy, unit: 'cm³' },
+          { name: 'Módulo Plástico Eje X-X', sym: 'Zx', val: p.Zx, unit: 'cm³' },
+          { name: 'Módulo Plástico Eje Y-Y', sym: 'Zy', val: p.Zy, unit: 'cm³' }
+        ];
+      }
 
       tbody.innerHTML = props.map(item => `
         <tr class="hover:bg-slate-50 transition">
@@ -1086,8 +1336,8 @@
       `).join('');
     }
 
-    // UPDATE CHART.JS GRAPH (CAPACITY VS UNBRACED LENGTH)
-    function updateCapacityChart(ipeName, Fy, Ky, Kx, currentL) {
+    // UPDATE CHART.JS GRAPH
+    function updateCapacityChart(famKey, profileName, Fy, Ky, Kx, currentL) {
       document.getElementById('chartCurrentL').textContent = currentL.toFixed(2);
 
       const lengths = [];
@@ -1096,12 +1346,12 @@
 
       for (let l = 0.5; l <= 10.0; l += 0.25) {
         lengths.push(parseFloat(l.toFixed(2)));
-        const res = calculateAiscCompression(ipeName, Fy, l, l, Ky, Kx);
+        const res = calculateAiscCompression(famKey, profileName, Fy, l, l, Ky, Kx);
         lrfdData.push(parseFloat(res.phiPn_kN.toFixed(1)));
         asdData.push(parseFloat(res.PnOmega_kN.toFixed(1)));
       }
 
-      const currentRes = calculateAiscCompression(ipeName, Fy, currentL, currentL, Ky, Kx);
+      const currentRes = calculateAiscCompression(famKey, profileName, Fy, currentL, currentL, Ky, Kx);
 
       const ctx = document.getElementById('capacityChart').getContext('2d');
 
@@ -1189,13 +1439,48 @@
       }
     }
 
-    // KATEX MATH FORMATTING
+    // STATIC KATEX RENDERER FOR SPANS
     function renderMathInDocument() {
+      // Inline titles
+      document.getElementById('lblCustomFy').innerHTML = `\\(F_y\\)`;
+      document.getElementById('lblLy').innerHTML = `\\(L_y\\)`;
+      document.getElementById('lblLx').innerHTML = `\\(L_x\\)`;
+      document.getElementById('lblK').innerHTML = `\\(K\\)`;
+      document.getElementById('lblKy').innerHTML = `\\(K_y\\)`;
+      document.getElementById('lblKx').innerHTML = `\\(K_x\\)`;
+
+      document.getElementById('cardLrfdTitle').innerHTML = `\\(\\phi_c P_n\\)`;
+      document.getElementById('cardPhi').innerHTML = `\\(\\phi_c = 0.90\\)`;
+      document.getElementById('cardAsdTitle').innerHTML = `\\(P_n / \\Omega_c\\)`;
+      document.getElementById('cardOmega').innerHTML = `\\(\\Omega_c = 1.67\\)`;
+      document.getElementById('cardKlrTitle').innerHTML = `\\(KL/r\\)`;
+
+      document.getElementById('lblFeFcr').innerHTML = `\\(F_e\\) & \\(F_{cr}\\)`;
+      document.getElementById('lblFeTitle').innerHTML = `\\(F_e\\)`;
+      document.getElementById('lblFcrTitle').innerHTML = `\\(F_{cr}\\)`;
+      document.getElementById('lblPnTitle').innerHTML = `\\(P_n\\), LRFD y ASD`;
+      document.getElementById('lblPnFormula').innerHTML = `\\(P_n = F_{cr} \\cdot A_g\\)`;
+      document.getElementById('lblPhiVal').innerHTML = `\\(\\phi_c = 0.90\\)`;
+      document.getElementById('lblOmegaVal').innerHTML = `\\(\\Omega_c = 1.67\\)`;
+
+      // Step 1 property labels
+      document.querySelectorAll('.katex-ag').forEach(el => el.innerHTML = `\\(A_g\\)`);
+      document.querySelectorAll('.katex-h').forEach(el => el.innerHTML = `\\(h\\)`);
+      document.querySelectorAll('.katex-bf').forEach(el => el.innerHTML = `\\(b_f\\)`);
+      document.querySelectorAll('.katex-b').forEach(el => el.innerHTML = `\\(b\\)`);
+      document.querySelectorAll('.katex-tf').forEach(el => el.innerHTML = `\\(t_f\\)`);
+      document.querySelectorAll('.katex-tw').forEach(el => el.innerHTML = `\\(t_w\\)`);
+      document.querySelectorAll('.katex-t').forEach(el => el.innerHTML = `\\(t\\)`);
+      document.querySelectorAll('.katex-rx').forEach(el => el.innerHTML = `\\(r_x\\)`);
+      document.querySelectorAll('.katex-ry').forEach(el => el.innerHTML = `\\(r_y\\)`);
+      document.querySelectorAll('.katex-ix').forEach(el => el.innerHTML = `\\(I_x\\)`);
+      document.querySelectorAll('.katex-e').forEach(el => el.innerHTML = `\\(E\\)`);
+
       if (window.renderMathInElement) {
         renderMathInElement(document.body, {
           delimiters: [
-            { left: '$$', right: '$$', display: true },
-            { left: '$', right: '$', display: false }
+            { left: '\\[', right: '\\]', display: true },
+            { left: '\\(', right: '\\)', display: false }
           ],
           throwOnError: false
         });
